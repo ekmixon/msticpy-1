@@ -94,7 +94,7 @@ def format_alert(
             """
         return HTML(title), pd.DataFrame(alert)
 
-    raise ValueError("Unrecognized alert object type " + str(type(alert)))
+    raise ValueError(f"Unrecognized alert object type {str(type(alert))}")
 
 
 @export
@@ -395,10 +395,12 @@ def _fmt_single_row(logon_row: pd.Series, os_family: str) -> List[str]:
     logon_record.append("")
 
     domain = logon_row["SubjectDomainName"]
-    if not domain:
-        subj_account = logon_row.SubjectUserName
-    else:
-        subj_account = f"{domain}/{logon_row.SubjectUserName}"
+    subj_account = (
+        f"{domain}/{logon_row.SubjectUserName}"
+        if domain
+        else logon_row.SubjectUserName
+    )
+
     logon_record.append(f"<b>Subject (source) account: </b>{subj_account}")
 
     logon_record.append(f"<b>Logon process: </b>{logon_row['LogonProcessName']}")
@@ -407,8 +409,7 @@ def _fmt_single_row(logon_row: pd.Series, os_family: str) -> List[str]:
     )
     logon_record.append(f"<b>Source IpAddress: </b>{logon_row['IpAddress']}")
     logon_record.append(f"<b>Source Host: </b>{logon_row['WorkstationName']}")
-    logon_record.append(f"<b>Logon status: </b>{logon_row['Status']}")
-    logon_record.append("")
+    logon_record.extend((f"<b>Logon status: </b>{logon_row['Status']}", ""))
     return logon_record
 
 

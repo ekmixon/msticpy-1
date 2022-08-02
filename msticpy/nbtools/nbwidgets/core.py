@@ -143,9 +143,7 @@ def default_max_buffer(max_default: Optional[int], default: int, unit: TimeUnit)
         return max(28, mag_default)
     if unit == TimeUnit.HOUR:
         return max(72, mag_default)
-    if unit == TimeUnit.WEEK:
-        return max(20, mag_default)
-    return max(240, mag_default)
+    return max(20, mag_default) if unit == TimeUnit.WEEK else max(240, mag_default)
 
 
 def default_before_after(default: Optional[int], unit: TimeUnit) -> int:
@@ -154,6 +152,4 @@ def default_before_after(default: Optional[int], unit: TimeUnit) -> int:
         return abs(default)
     if unit in (TimeUnit.DAY, TimeUnit.WEEK):
         return 1
-    if unit == TimeUnit.HOUR:
-        return 6
-    return 60
+    return 6 if unit == TimeUnit.HOUR else 60

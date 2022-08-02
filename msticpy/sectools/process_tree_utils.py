@@ -131,9 +131,7 @@ def get_parent(
 
     """
     proc = get_process(procs, source)
-    if proc.parent_key in procs.index:
-        return procs.loc[proc.parent_key]
-    return None
+    return procs.loc[proc.parent_key] if proc.parent_key in procs.index else None
 
 
 def get_root(procs: pd.DataFrame, source: Union[str, pd.Series]) -> pd.Series:
@@ -222,9 +220,7 @@ def get_children(
     """
     proc = get_process(procs, source)
     children = procs[procs[Col.parent_key] == proc.name]
-    if include_source:
-        return children.append(proc)
-    return children
+    return children.append(proc) if include_source else children
 
 
 def get_descendents(
@@ -333,9 +329,7 @@ def get_siblings(
     parent = get_parent(procs, source)
     proc = get_process(procs, source)
     siblings = get_children(procs, parent, include_source=False)
-    if not include_source:
-        return siblings[siblings.index != proc.name]
-    return siblings
+    return siblings if include_source else siblings[siblings.index != proc.name]
 
 
 def get_summary_info(procs: pd.DataFrame) -> Dict[str, int]:
@@ -353,11 +347,11 @@ def get_summary_info(procs: pd.DataFrame) -> Dict[str, int]:
         Summary statistic about the process tree
 
     """
-    summary: Dict[str, Any] = {}
-    summary["Processes"] = len(procs)
-    summary["RootProcesses"] = len(procs[procs["IsRoot"]])
-    summary["LeafProcesses"] = len(procs[procs["IsLeaf"]])
-    summary["BranchProcesses"] = len(procs[procs["IsBranch"]])
-    summary["IsolatedProcesses"] = len(procs[(procs["IsRoot"]) & (procs["IsLeaf"])])
-    summary["LargestTreeDepth"] = procs["path"].str.count("/").max() + 1
-    return summary
+    return {
+        "Processes": len(procs),
+        "RootProcesses": len(procs[procs["IsRoot"]]),
+        "LeafProcesses": len(procs[procs["IsLeaf"]]),
+        "BranchProcesses": len(procs[procs["IsBranch"]]),
+        "IsolatedProcesses": len(procs[(procs["IsRoot"]) & (procs["IsLeaf"])]),
+        "LargestTreeDepth": procs["path"].str.count("/").max() + 1,
+    }

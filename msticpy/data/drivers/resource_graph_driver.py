@@ -159,8 +159,6 @@ class ResourceGraphDriver(DriverBase):
                 "Source is not connected. ", "Please call connect() and retry."
             )
 
-        result_truncated = False
-
         top = kwargs.get("top", 1000)
 
         request_options = QueryRequestOptions(
@@ -176,12 +174,7 @@ class ResourceGraphDriver(DriverBase):
 
         response = self.client.resources(request)  # type: QueryResponse
 
-        # Pagination logic adapted from azure-cli-extensions
-        # https://github.com/Azure/azure-cli-extensions/blob/8dade2f6fe28803d0fbdb1700c3ab4e4d71e5318/src/resource-graph/azext_resourcegraph/custom.py#L75
-
-        if response.result_truncated == ResultTruncated.true:
-            result_truncated = True
-
+        result_truncated = response.result_truncated == ResultTruncated.true
         if result_truncated and top is not None and len(response.data) < top:
             warnings.warn(
                 "Unable to paginate the results of the query. "

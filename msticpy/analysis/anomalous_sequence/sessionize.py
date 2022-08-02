@@ -171,13 +171,7 @@ def create_session_col(
         cur = df_with_sesind.iloc[i]
         prev = df_with_sesind.iloc[i - 1]
 
-        # if any of the user_identifier_cols values change, a new session should start
-        new_flag = False
-        for col in user_identifier_cols:
-            if cur[col] != prev[col]:
-                new_flag = True
-                break
-
+        new_flag = any(cur[col] != prev[col] for col in user_identifier_cols)
         dif = cur[time_col] - prev[time_col]
         cml = prev["cml_time"] + dif
         # if the max session length is exceeded or the max separation between events is exceeded,
@@ -189,12 +183,10 @@ def create_session_col(
             df_with_sesind.loc[i, "time_diff"] = pd.to_timedelta(0)
             df_with_sesind.loc[i, "cml_time"] = pd.to_timedelta(0)
             ses_ind += 1
-            df_with_sesind.loc[i, "session_ind"] = ses_ind
         else:
             df_with_sesind.loc[i, "time_diff"] = dif
             df_with_sesind.loc[i, "cml_time"] = cml
-            df_with_sesind.loc[i, "session_ind"] = ses_ind
-
+        df_with_sesind.loc[i, "session_ind"] = ses_ind
     # replace dummy_str with nan values
     for col in user_identifier_cols:
         df_with_sesind[col] = df_with_sesind[col].replace("dummy_str", np.nan)

@@ -39,7 +39,7 @@ author = "Ian Hellen"
 
 with open("../../msticpy/_version.py", "r", encoding="utf-8") as fd:
     v_match = re.search(r'^VERSION\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE)
-    _ver = v_match.group(1) if v_match else "no version"
+    _ver = v_match[1] if v_match else "no version"
 
 # The full version, including alpha/beta/rc tags
 release = _ver

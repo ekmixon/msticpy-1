@@ -87,11 +87,10 @@ class KustoDriver(KqlDriver):
         mp_az_auth = kwargs.pop("mp_az_auth", None)
         mp_az_tenant_id = kwargs.pop("mp_az_tenant_id", None)
 
-        if (
-            self._cluster_uri
-        ):  # This should be set by _get_connection_string called above
-            cluster_settings = self._kusto_settings.get(self._cluster_uri.casefold())
-            if cluster_settings:
+        if self._cluster_uri:  # This should be set by _get_connection_string called above
+            if cluster_settings := self._kusto_settings.get(
+                self._cluster_uri.casefold()
+            ):
                 if mp_az_auth is None and cluster_settings["integrated_auth"]:
                     mp_az_auth = "default"
                 if mp_az_tenant_id is None and cluster_settings["tenant_id"]:
@@ -138,10 +137,9 @@ class KustoDriver(KqlDriver):
             the underlying provider result if an error.
 
         """
-        new_connection = self._get_connection_string(
+        if new_connection := self._get_connection_string(
             query_source=query_source, **kwargs
-        )
-        if new_connection:
+        ):
             self.current_connection = new_connection
         data, result = self.query_with_results(query)
         return data if data is not None else result
@@ -240,10 +238,14 @@ class KustoDriver(KqlDriver):
         """Return cluster URI from config if cluster name is passed."""
         if cluster.strip().casefold().startswith("https://"):
             return cluster
-        for cluster_key, kusto_config in self._kusto_settings.items():
-            if cluster_key.startswith(f"https://{cluster.casefold()}."):
-                return kusto_config["cluster"]
-        return None
+        return next(
+            (
+                kusto_config["cluster"]
+                for cluster_key, kusto_config in self._kusto_settings.items()
+                if cluster_key.startswith(f"https://{cluster.casefold()}.")
+            ),
+            None,
+        )
 
     def _get_endpoint_uri(self):
         if not self._cluster_uri.endswith("/"):
@@ -260,19 +262,19 @@ def _get_kusto_settings() -> KustoClusterSettings:
         if "-" in prov_name:
             _, instance = prov_name.split("-", maxsplit=1)
 
-        cluster = settings.args.get("Cluster")
-        if not cluster:
+        if cluster := settings.args.get("Cluster"):
+            kusto_settings[cluster.casefold()] = {
+                "tenant_id": settings.args.get("TenantId"),  # type: ignore
+                "integrated_auth": settings.args.get("IntegratedAuth"),  # type: ignore
+                "client_id": settings.args.get("ClientId"),  # type: ignore
+                "args": settings.args,
+                "cluster": cluster,
+                "alias": instance,
+            }
+        else:
             raise MsticpyUserConfigError(
                 "Mandatory 'Cluster' setting is missing in msticpyconfig.",
                 f"the Kusto entry with the missing setting is '{prov_name}'",
                 title=f"No Cluster value for {prov_name}",
             )
-        kusto_settings[cluster.casefold()] = {
-            "tenant_id": settings.args.get("TenantId"),  # type: ignore
-            "integrated_auth": settings.args.get("IntegratedAuth"),  # type: ignore
-            "client_id": settings.args.get("ClientId"),  # type: ignore
-            "args": settings.args,
-            "cluster": cluster,
-            "alias": instance,
-        }
     return kusto_settings

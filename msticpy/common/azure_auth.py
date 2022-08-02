@@ -83,15 +83,14 @@ def az_connect(
     credentials = az_connect_core(
         auth_methods=auth_methods, tenant_id=tenant_id, silent=silent
     )
-    sub_client = SubscriptionClient(
+    if sub_client := SubscriptionClient(
         credential=credentials.modern,
         base_url=az_cloud_config.endpoints.resource_manager,
         credential_scopes=[az_cloud_config.token_uri],
-    )
-    if not sub_client:
+    ):
+        return credentials
+    else:
         raise CloudError("Could not create a Subscription client.")
-
-    return credentials
 
 
 def az_user_connect(tenant_id: str = None, silent: bool = False) -> AzCredentials:

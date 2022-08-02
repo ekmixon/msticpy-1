@@ -180,9 +180,7 @@ class SentinelWatchlistsMixin:
         elif isinstance(item, Dict):
             new_items = [item]
         elif isinstance(item, pd.DataFrame):
-            for _, line_item in item.iterrows():
-                new_items.append(dict(line_item))
-
+            new_items.extend(dict(line_item) for _, line_item in item.iterrows())
         current_items = self.list_watchlist_items(watchlist_name)
         current_items_values = current_items.filter(
             regex="^properties.itemsKeyValue.", axis=1

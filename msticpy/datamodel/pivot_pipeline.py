@@ -126,15 +126,11 @@ def _get_pd_accessor_func(data, df_func):
     acc_name = func_name = func = None
     if "." in df_func:
         acc_name, func_name = df_func.split(".")
-        accessor = getattr(data, acc_name, None)
-        if accessor:
+        if accessor := getattr(data, acc_name, None):
             func = getattr(accessor, func_name, None)
     else:
         func = getattr(data, df_func, None)
-    if func:
-        # run the function with any additional args
-        return func
-    return None
+    return func or None
 
 
 class Pipeline:
@@ -163,8 +159,7 @@ class Pipeline:
         self.description = description
         self.steps: List[PipelineStep] = []
         if steps:
-            for step in steps:
-                self.steps.append(step)
+            self.steps.extend(iter(steps))
 
     def __repr__(self) -> str:
         """

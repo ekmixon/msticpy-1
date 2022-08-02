@@ -135,7 +135,7 @@ class SplunkDriver(DriverBase):
         """Check and consolidate connection parameters."""
         cs_dict: Dict[str, Any] = self._CONNECT_DEFAULTS
         # Fetch any config settings
-        cs_dict.update(self._get_config_settings())
+        cs_dict |= self._get_config_settings()
         # If a connection string - parse this and add to config
         if connection_str:
             cs_items = connection_str.split(";")
@@ -157,8 +157,7 @@ class SplunkDriver(DriverBase):
         elif isinstance(verify_opt, bool):
             cs_dict["verify"] = verify_opt
 
-        missing_args = set(self._SPLUNK_REQD_ARGS) - cs_dict.keys()
-        if missing_args:
+        if missing_args := set(self._SPLUNK_REQD_ARGS) - cs_dict.keys():
             raise MsticpyUserConfigError(
                 "One or more connection parameters missing for Splunk connector",
                 ", ".join(missing_args),
@@ -318,9 +317,7 @@ class SplunkDriver(DriverBase):
             Dataframe with list of saved searches with name and query columns.
 
         """
-        if self.connected:
-            return self._get_saved_searches()
-        return None
+        return self._get_saved_searches() if self.connected else None
 
     def _get_saved_searches(self) -> Union[pd.DataFrame, Any]:
         """
@@ -359,9 +356,7 @@ class SplunkDriver(DriverBase):
             Dataframe with list of fired alerts with alert name and count columns.
 
         """
-        if self.connected:
-            return self._get_fired_alerts()
-        return None
+        return self._get_fired_alerts() if self.connected else None
 
     def _get_fired_alerts(self) -> Union[pd.DataFrame, Any]:
         """

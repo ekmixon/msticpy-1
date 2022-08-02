@@ -116,9 +116,7 @@ def build_and_show_process_tree(
     plot_process_tree
 
     """
-    # Check if this table already seems to have the proc_tree metadata
-    missing_cols = _check_proc_tree_schema(data)
-    if missing_cols:
+    if missing_cols := _check_proc_tree_schema(data):
         data = build_process_tree(procs=data, schema=schema)
 
     return plot_process_tree(
@@ -316,9 +314,7 @@ def _pre_process_tree(
     proc_tree: pd.DataFrame, schema: ProcSchema = None, pid_fmt: str = "hex"
 ):
     """Extract dimensions and formatted values from proc_tree."""
-    # Check if this table already seems to have the proc_tree metadata
-    missing_cols = _check_proc_tree_schema(proc_tree)
-    if missing_cols:
+    if missing_cols := _check_proc_tree_schema(proc_tree):
         proc_tree = build_process_tree(procs=proc_tree, schema=schema)
 
     if schema is None:
@@ -363,18 +359,23 @@ def _pid_fmt(pid, pid_fmt):
     if pid_fmt == "hex":
         return f"PID: {pid}" if str(pid).startswith("0x") else f"PID: 0x{int(pid):x}"
     return (
-        f"PID: {pid}" if not str(pid).startswith("0x") else f"PID: {int(pid, base=16)}"
+        f"PID: {int(pid, base=16)}"
+        if str(pid).startswith("0x")
+        else f"PID: {pid}"
     )
 
 
 def _validate_plot_schema(proc_tree: pd.DataFrame, schema):
     """Validate that we have the required columns."""
-    required_cols = set(
-        ["path", schema.cmd_line, schema.process_name, schema.process_id]
-    )
+    required_cols = {
+        "path",
+        schema.cmd_line,
+        schema.process_name,
+        schema.process_id,
+    }
+
     proc_cols = set(proc_tree.columns)
-    missing = required_cols - proc_cols
-    if missing:
+    if missing := required_cols - proc_cols:
         raise ProcessTreeSchemaException(
             f"Required columns not found in data set: {','.join(missing)}"
         )
@@ -541,16 +542,7 @@ def _check_proc_tree_schema(data):
     """Return true if expected process tree columns are present."""
     if data.index.name != Col.proc_key:
         return {Col.proc_key}
-    expected_cols = set(
-        [
-            Col.parent_key,
-            "IsRoot",
-            "IsLeaf",
-            "IsBranch",
-            "path",
-            # "parent_index",
-        ]
-    )
+    expected_cols = {Col.parent_key, "IsRoot", "IsLeaf", "IsBranch", "path"}
     return expected_cols - set(data.columns)
 
 

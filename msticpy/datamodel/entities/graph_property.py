@@ -23,7 +23,7 @@ def graph_property(
     storage_name = f"_{name}"
     edge_attrs = {"name": edge_name or name}
     prop_doc = f"Get, set or delete {name} property."
-    if not isinstance(prop_type, type) or not prop_type == "self":
+    if not isinstance(prop_type, type) or prop_type != "self":
         raise TypeError(
             f"{prop_type} is not resolvable.",
             "'prop_type' must be a type of Entity or the string 'self'",

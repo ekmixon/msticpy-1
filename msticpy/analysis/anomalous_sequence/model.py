@@ -339,7 +339,7 @@ class Model:
         if self.session_type == SessionType.cmds_params_values:
             self._compute_probs_values()
 
-    def compute_setof_params_cond_cmd(self, use_geo_mean: bool):  # noqa: MC0001
+    def compute_setof_params_cond_cmd(self, use_geo_mean: bool):    # noqa: MC0001
         """
         Compute likelihood of combinations of params conditional on the cmd.
 
@@ -394,7 +394,6 @@ class Model:
                         use_geo_mean=use_geo_mean,
                     )
                     result[c_name][tuple(params)] = prob
-            self.set_params_cond_cmd_probs = result
         else:
             result = defaultdict(lambda: defaultdict(lambda: 0))
             for ses in self.sessions:
@@ -418,7 +417,8 @@ class Model:
                         use_geo_mean=use_geo_mean,
                     )
                     result[c_name][tuple(key)] = prob
-            self.set_params_cond_cmd_probs = result
+
+        self.set_params_cond_cmd_probs = result
 
     def compute_likelihoods_of_sessions(self, use_start_end_tokens: bool = True):
         """
@@ -699,9 +699,7 @@ class Model:
         """Check whether the Cmd datatype has the expected attributes."""
         session = self.sessions[0]
         cmd = session[0]
-        if "name" in dir(cmd) and "params" in dir(cmd):
-            return True
-        return False
+        return "name" in dir(cmd) and "params" in dir(cmd)
 
 
 class SessionType:

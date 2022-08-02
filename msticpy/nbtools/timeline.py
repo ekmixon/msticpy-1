@@ -407,7 +407,7 @@ def display_timeline_values(  # noqa: C901, MC0001
                 x=time_column, alpha=0.7, source=row_source
             )
             if legend_pos != "none":
-                plot_args["legend_label"] = str(inline_legend)
+                plot_args["legend_label"] = inline_legend
 
             if "vbar" in plot_kinds:
                 p_series.append(
@@ -708,8 +708,7 @@ def check_df_columns(
         If one or more columns not found in `data`
 
     """
-    missing_cols = set(req_columns) - set(data.columns)
-    if missing_cols:
+    if missing_cols := set(req_columns) - set(data.columns):
         raise MsticpyParameterError(
             title="Columns not found in DataFrame",
             help_uri=help_uri.format(plot_type=plot_type),
@@ -824,14 +823,17 @@ def _unpack_data_series_dict(data, **kwargs):
 
 def _get_def_source_cols(data, source_columns):
     if not source_columns:
-        data_columns = set()
-        if all(
-            col in data.columns for col in ["NewProcessName", "EventID", "CommandLine"]
-        ):
-            data_columns = set(["NewProcessName", "EventID", "CommandLine"])
+        return (
+            {"NewProcessName", "EventID", "CommandLine"}
+            if all(
+                col in data.columns
+                for col in ["NewProcessName", "EventID", "CommandLine"]
+            )
+            else set()
+        )
+
     else:
-        data_columns = set(source_columns)
-    return data_columns
+        return set(source_columns)
 
 
 def _create_data_grouping(data, source_columns, time_column, group_by, color):
@@ -906,12 +908,12 @@ def _create_dict_from_grouping(data, source_columns, time_column, group_by, colo
 
 def _get_ref_event_time(**kwargs) -> Tuple[Optional[Any], Union[Any, str]]:
     """Extract the reference time from kwargs."""
-    ref_alert = kwargs.get("alert", None)
+    ref_alert = kwargs.get("alert")
     if ref_alert is not None:
         ref_event = ref_alert
         ref_label = "Alert time"
     else:
-        ref_event = kwargs.get("ref_event", None)
+        ref_event = kwargs.get("ref_event")
         ref_label = "Event time"
 
     if ref_event is not None:
@@ -921,7 +923,7 @@ def _get_ref_event_time(**kwargs) -> Tuple[Optional[Any], Union[Any, str]]:
         if not ref_time:
             ref_time = getattr(ref_event, "TimeGenerated", None)
     else:
-        ref_time = kwargs.get("ref_time", None)
+        ref_time = kwargs.get("ref_time")
         ref_label = "Ref time"
     return ref_time, kwargs.get("ref_label", ref_label)  # type: ignore
 
@@ -956,7 +958,7 @@ def _create_tool_tips(
             for col in columns:
                 disp_col, col_tooltip, col_fmt = _get_datetime_tooltip(col, data_df)
                 tool_tip_dict[disp_col] = col_tooltip
-                formatters.update(col_fmt)
+                formatters |= col_fmt
         return list(tool_tip_dict.items()), formatters
 
     # If just a dataframe we just process the columns against this

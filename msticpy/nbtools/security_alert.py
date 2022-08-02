@@ -165,9 +165,12 @@ class SecurityAlert(SecurityBase):
         if isinstance(src_row.ExtendedProperties, str):
             try:
                 ext_props = json.loads(src_row["ExtendedProperties"])
-                for ent, val in ext_props.items():
-                    if ent in ["IpAddress", "Username"]:
-                        input_entities.append({"Entity": val, "Type": ent})
+                input_entities.extend(
+                    {"Entity": val, "Type": ent}
+                    for ent, val in ext_props.items()
+                    if ent in ["IpAddress", "Username"]
+                )
+
             except json.JSONDecodeError:
                 pass
 

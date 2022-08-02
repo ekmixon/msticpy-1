@@ -304,10 +304,10 @@ class QueryStore:
                 )
                 if query_container in self.data_families:
                     query_path = query_container
-        query = self.data_families.get(query_path, {}).get(query_name)  # type: ignore
-        if not query:
+        if query := self.data_families.get(query_path, {}).get(query_name):
+            return query
+        else:
             raise LookupError(f"Could not find {query_name} in path {query_path}.")
-        return query
 
     def find_query(self, query_name: str) -> Set[Optional[QuerySource]]:
         """

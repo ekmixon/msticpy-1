@@ -125,7 +125,7 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
 
     @current_file.setter
     def current_file(self, file_name: str):
-        self._current_file = str(file_name) if file_name else None
+        self._current_file = file_name or None
         self.txt_current_file.value = self._current_file or ""
 
     def _update_curr_file(self, change):
@@ -325,10 +325,10 @@ class MpConfigFile(CompEditStatusMixin, CompEditDisplayMixin):
         self.buttons["reload"].on_click(self._btn_func("refresh_mp_config"))
         self.buttons["showkv"].on_click(self._btn_func_no_disp("show_kv_secrets"))
 
-        btns1 = widgets.VBox(list(self.buttons.values())[: int(len(self.buttons) / 2)])
+        btns1 = widgets.VBox(list(self.buttons.values())[:len(self.buttons) // 2])
         # flake8: noqa: E203
         # conflicts with Black formatting
-        btns2 = widgets.VBox(list(self.buttons.values())[int(len(self.buttons) / 2) :])
+        btns2 = widgets.VBox(list(self.buttons.values())[len(self.buttons) // 2:])
         btns_all = widgets.HBox([btns1, btns2])
         return widgets.VBox(
             [widgets.Label(value="Operations"), btns_all],

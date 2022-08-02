@@ -462,7 +462,7 @@ def plot_entitygraph(  # pylint: disable=too-many-locals
             color = color_map.get(attrs["Type"].lower(), "green")
         except KeyError:
             color = "green"
-        node_attrs.update({node: color})
+        node_attrs[node] = color
 
     nx.set_node_attributes(entity_graph, node_attrs, "node_color")
 

@@ -352,7 +352,7 @@ def _find_original_entity(ent, base_ents):
         return ent
 
 
-def _generate_base_ents(ents: list) -> list:  # noqa: MC0001
+def _generate_base_ents(ents: list) -> list:    # noqa: MC0001
     """Generate a list of all enties form a set of nested entities."""
     base_ents = []
     for ent in ents:
@@ -364,9 +364,13 @@ def _generate_base_ents(ents: list) -> list:  # noqa: MC0001
                         base_ents.append(prop)
                         for val in prop:
                             if isinstance(prop[val], list):
-                                for p in prop[val]:
-                                    if isinstance(p, dict) and "$id" in p.keys():
-                                        base_ents.append(p)
+                                base_ents.extend(
+                                    p
+                                    for p in prop[val]
+                                    if isinstance(p, dict)
+                                    and "$id" in p.keys()
+                                )
+
                             elif (
                                 isinstance(prop[val], dict)
                                 and "$id" in prop[val].keys()

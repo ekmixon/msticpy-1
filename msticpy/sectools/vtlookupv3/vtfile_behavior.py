@@ -339,8 +339,7 @@ def _extract_processes(process_data, procs_created, parent=None):
             si_proc.IsBranch = True
         else:
             si_proc.IsRoot = True
-        child_procs_raw = process.get("children", [])
-        if child_procs_raw:
+        if child_procs_raw := process.get("children", []):
             si_proc.children = _extract_processes(
                 child_procs_raw, procs_created, parent=si_proc
             )

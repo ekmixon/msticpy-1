@@ -263,7 +263,7 @@ def _find_risky_sudo_session(risky_actions: dict, sudo_sessions: dict):
                 <= _normalize_to_utc(key)
                 <= _normalize_to_utc(sess_val["End"])
             ):
-                risky_sessions.update({sess_key: value})
+                risky_sessions[sess_key] = value
     return risky_sessions
 
 
@@ -278,5 +278,5 @@ def _find_suspicious_sudo_session(suspicious_actions: list, sudo_sessions: dict)
                     <= _normalize_to_utc(value[0]["TimeGenerated"].iloc[1])
                     <= _normalize_to_utc(sess_val["End"])
                 ):
-                    risky_sessions.update({sess_key: "Suspicious event pattern"})
+                    risky_sessions[sess_key] = "Suspicious event pattern"
     return risky_sessions

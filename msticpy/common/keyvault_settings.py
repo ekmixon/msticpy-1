@@ -196,7 +196,7 @@ class KeyVaultSettings:
             )
         if auth.endswith("/"):
             return auth + tenant.strip()
-        return auth + "/" + tenant.strip()
+        return f"{auth}/{tenant.strip()}"
 
     def get_tenant_authority_host(
         self, authority_uri: str = None, tenant: str = None

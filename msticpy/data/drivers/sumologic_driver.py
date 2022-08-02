@@ -133,7 +133,7 @@ class SumologicDriver(DriverBase):
         cs_dict: Dict[str, Any] = self._CONNECT_DEFAULTS
         # Fetch any config settings
         settings, cs_is_instance_name = self._get_config_settings(connection_str)
-        cs_dict.update(settings)
+        cs_dict |= settings
         # If a connection string - parse this and add to config
         if connection_str and not cs_is_instance_name:
             cs_dict["connection_str"] = connection_str
@@ -142,8 +142,7 @@ class SumologicDriver(DriverBase):
             cs_dict.update(kwargs)
             check_kwargs(cs_dict, list(SUMOLOGIC_CONNECT_ARGS.keys()))
 
-        missing_args = set(self._SUMOLOGIC_REQD_ARGS) - cs_dict.keys()
-        if missing_args:
+        if missing_args := set(self._SUMOLOGIC_REQD_ARGS) - cs_dict.keys():
             raise MsticpyUserConfigError(
                 "One or more connection parameters missing for Sumologic connector",
                 ", ".join(missing_args),
@@ -265,9 +264,7 @@ class SumologicDriver(DriverBase):
         if verbosity >= 2:
             print(f"DEBUG: status {status}")
         time_counter = 0
-        while status["state"] != "DONE GATHERING RESULTS":
-            if status["state"] == "CANCELLED":
-                break
+        while status["state"] not in ["DONE GATHERING RESULTS", "CANCELLED"]:
             status = self.service.search_job_status(searchjob)
             if verbosity >= 4:
                 print(

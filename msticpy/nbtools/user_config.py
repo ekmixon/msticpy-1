@@ -84,7 +84,7 @@ def _load_query_providers(user_defaults):
         for prov_name, qry_prov_entry in user_defaults.get("QueryProviders").items():
             if prov_name == "AzureSentinel":
                 provs = _load_az_workspaces(prov_name, qry_prov_entry)
-                prov_dict.update(provs)
+                prov_dict |= provs
             else:
                 obj_name, prov_obj = _load_provider(prov_name, qry_prov_entry)
                 prov_dict[obj_name] = prov_obj
@@ -200,15 +200,16 @@ def _load_notebooklets(comp_settings=None, **kwargs):
         if prov_name:
             nbinit_params = {"query_provider": prov_name}
         if prov_args:
-            nbinit_params.update(
-                {f"{prov_name}_{name}": val for name, val in prov_args.items()}
-            )
+            nbinit_params |= {
+                f"{prov_name}_{name}": val for name, val in prov_args.items()
+            }
+
     namespace = kwargs.pop("global_ns", {})
     namespace.update(kwargs.pop("local_ns", {}))
     providers = _get_provider_names(namespace)
     # Add these as additional providers
     providers = [f"+{prov}" for prov in providers]
-    nbinit_params.update({"providers": providers, "namespace": namespace})
+    nbinit_params |= {"providers": providers, "namespace": namespace}
     try:
         import msticnb
 
@@ -249,8 +250,7 @@ def _load_azsent_api(comp_settings=None, **kwargs):
     del kwargs
     from ..data.azure import MicrosoftSentinel
 
-    res_id = comp_settings.pop("res_id", None)
-    if res_id:
+    if res_id := comp_settings.pop("res_id", None):
         az_sent = MicrosoftSentinel(res_id=res_id)
     else:
         az_sent = MicrosoftSentinel()

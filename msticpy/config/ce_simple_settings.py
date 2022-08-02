@@ -61,8 +61,7 @@ class CESimpleSettings(CompEditSimple):
         prov_path = f"{self._COMP_PATH}"
         self.mp_controls.save_ctrl_values(prov_path)
         val_results = self.mp_controls.validate_setting(prov_path)
-        status = "  ".join(res[1] for res in val_results if not res[0])
-        if status:
+        if status := "  ".join(res[1] for res in val_results if not res[0]):
             self.set_status(status)
 
     def _check_instance_settings(self):

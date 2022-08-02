@@ -357,10 +357,8 @@ class UserDefQryProvCtrl(SettingsControl):
 
         """
         alias = {"alias": self.txt_alias.value} if self.txt_alias.value else {}
-        connect = (
-            {"connect": self.cb_connect.value} if not self.cb_connect.value else {}
-        )
-        return {**alias, **connect}
+        connect = {} if self.cb_connect.value else {"connect": self.cb_connect.value}
+        return alias | connect
 
     @value.setter
     def value(self, value: Union[str, Dict[str, Optional[str]]]):

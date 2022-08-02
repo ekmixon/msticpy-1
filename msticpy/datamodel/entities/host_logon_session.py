@@ -96,9 +96,7 @@ class HostLogonSession(Entity):
     @property
     def name_str(self) -> str:
         """Return Entity Name."""
-        if self.Host:
-            return f"{self.Host.HostName}"
-        return self.__class__.__name__
+        return f"{self.Host.HostName}" if self.Host else self.__class__.__name__
 
     _entity_schema = {
         # Account

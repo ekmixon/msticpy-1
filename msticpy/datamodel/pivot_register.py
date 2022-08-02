@@ -330,9 +330,7 @@ def join_result(
 
 def _get_entity_attr_or_self(obj, attrib):
     """Return entity attribute or obj if not an entity."""
-    if isinstance(obj, entities.Entity):
-        return getattr(obj, attrib)
-    return obj
+    return getattr(obj, attrib) if isinstance(obj, entities.Entity) else obj
 
 
 def _get_input_value(
@@ -382,15 +380,7 @@ def _check_valid_settings_for_input(input_value: Any, pivot_reg: PivotRegistrati
     if pivot_reg.input_type == "value":
         if not pivot_reg.func_input_value_arg:
             raise ValueError("No value for pivot func input argument was given")
-        if not pivot_reg.can_iterate and (
-            isinstance(input_value, pd.DataFrame)
-            or (
-                # pylint: disable=isinstance-second-argument-not-valid-type
-                isinstance(input_value, pd.DataFrame)
-                and not isinstance(input_value, str)
-                # pylint: enable=isinstance-second-argument-not-valid-type
-            )
-        ):
+        if not pivot_reg.can_iterate and isinstance(input_value, pd.DataFrame):
             raise ValueError(
                 f"This function does not accept inputs of {type(input_value)}"
             )
@@ -478,7 +468,7 @@ def _iterate_func(target_func, input_df, input_column, pivot_reg, **kwargs):
     results = []
     # Add any static parameters to all_rows_kwargs
     all_rows_kwargs = kwargs.copy()
-    all_rows_kwargs.update((pivot_reg.func_static_params or {}))
+    all_rows_kwargs |= ((pivot_reg.func_static_params or {}))
     res_key_col_name = pivot_reg.func_out_column_name or pivot_reg.func_input_value_arg
 
     for row_index, row in enumerate(input_df[[input_column]].itertuples(index=False)):
@@ -505,9 +495,7 @@ def _iterate_func(target_func, input_df, input_column, pivot_reg, **kwargs):
             result["src_row_index"] = row_index
         results.append(result)
     if pivot_reg.return_raw_output:
-        if len(results) == 1:
-            return results[0]
-        return results
+        return results[0] if len(results) == 1 else results
     return pd.concat(results, ignore_index=True)
 
 

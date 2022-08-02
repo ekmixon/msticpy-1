@@ -211,9 +211,10 @@ def unpack_items(
         input_string = _b64_string_pad(input_string)
         return _decode_b64_string_recursive(input_string)
     if data is not None:
-        if not column:
+        if column:
+            return unpack_df(data=data, column=column, trace=trace, utf16=utf16)
+        else:
             raise ValueError("column must be supplied if the input is a DataFrame")
-        return unpack_df(data=data, column=column, trace=trace, utf16=utf16)
     return None
 
 
@@ -616,7 +617,7 @@ def _is_known_b64_prefix(
     input_string: str,
 ) -> Union[Tuple[str, str], Tuple[None, None]]:
     """If this is known file type return the prefix and file type."""
-    first160chars = input_string[0:160].replace("\n", "").replace("\r", "")
+    first160chars = input_string[:160].replace("\n", "").replace("\r", "")
     for prefix, file_type in _BASE64_HEADER_TYPES.items():
         if first160chars.startswith(prefix):
             return prefix, file_type
@@ -659,7 +660,7 @@ def _unpack_and_hash_b64_binary(
         return None
 
     output_files = {}
-    if file_type in ["zip", "gz", "tar"]:
+    if file_type in {"zip", "gz", "tar"}:
         # if this is a known archive type - try to extract the contents
         (unpacked_type, file_items) = _get_items_from_archive(input_bytes, file_type)
         if unpacked_type != "unknown":
@@ -836,7 +837,7 @@ def _b64_string_pad(string: str) -> str:
 
     string = string.rstrip("=")
     while len(string) % 4 != 0:
-        string = string + "A"
+        string += "A"
     return string
 
 

@@ -74,7 +74,7 @@ class LAUploader(UploaderBase):
             The encoded authorization string.
 
         """
-        x_headers = "x-ms-date:" + date
+        x_headers = f"x-ms-date:{date}"
         string_to_hash = "\n".join(
             [method, str(content_length), content_type, x_headers, resource]
         )
@@ -83,8 +83,7 @@ class LAUploader(UploaderBase):
         encoded_hash = base64.b64encode(
             hmac.new(decoded_key, bytes_to_hash, digestmod=hashlib.sha256).digest()
         ).decode()
-        authorization = f"SharedKey {self.workspace}:{encoded_hash}"
-        return authorization
+        return f"SharedKey {self.workspace}:{encoded_hash}"
 
     def _post_data(self, body: str, table_name: str):
         """
@@ -214,12 +213,12 @@ class LAUploader(UploaderBase):
         t_name = bool(table_name)
         input_files = Path(folder_path).glob(ext)
         # pylint: disable=unnecessary-comprehension
-        input_files = [path for path in input_files]  # type: ignore
+        input_files = list(input_files)
         # pylint: enable=unnecessary-comprehension
         progress = tqdm(total=len(list(input_files)), desc="Files", position=0)
         for path in input_files:
             data = pd.read_csv(path, delimiter=delim)
-            if t_name is False:
+            if not t_name:
                 table_name = path.stem
             self.upload_df(data, table_name)
             progress.update(1)

@@ -167,9 +167,7 @@ def _read_config_file(config_file: str) -> Dict[str, Any]:
 def _consolidate_configs(
     def_config: Dict[str, Any], cust_config: Dict[str, Any]
 ) -> Dict[str, Any]:
-    resultant_config = {}
-    resultant_config.update(def_config)
-
+    resultant_config = {} | def_config
     _override_config(resultant_config, cust_config)
     return resultant_config
 
@@ -191,19 +189,15 @@ def _get_default_config():
     try:
         conf_file = pkg_resources.resource_filename(package, _CONFIG_FILE)
     except ModuleNotFoundError as mod_err:
-        # if all else fails we try to find the package default config somewhere
-        # in the package tree - we use the first one we find
-        pkg_root = _get_pkg_path("msticpy")
-        if not pkg_root:
+        if pkg_root := _get_pkg_path("msticpy"):
+            conf_file = next(iter(pkg_root.glob(f"**/{_CONFIG_FILE}")))
+        else:
             raise MsticpyUserConfigError(
                 f"Unable to locate the package default {_CONFIG_FILE}",
                 "msticpy package may be corrupted.",
                 title=f"Package {_CONFIG_FILE} missing.",
             ) from mod_err
-        conf_file = next(iter(pkg_root.glob("**/" + _CONFIG_FILE)))
-    if conf_file:
-        return _read_config_file(conf_file)
-    return {}
+    return _read_config_file(conf_file) if conf_file else {}
 
 
 def _get_custom_config():
@@ -264,7 +258,7 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
     """
     if config_file:
         mp_config = _read_config_file(config_file)
-    if not (mp_config or config_file):
+    if not mp_config and not config_file:
         mp_config = settings
 
     if not isinstance(mp_config, dict):
@@ -294,9 +288,7 @@ def validate_config(mp_config: Dict[str, Any] = None, config_file: str = None):
         mp_warn.extend(prov_warn)
 
     _print_validation_report(mp_errors, mp_warn)
-    if mp_errors or mp_warn:
-        return mp_errors, mp_warn
-    return [], []
+    return (mp_errors, mp_warn) if mp_errors or mp_warn else ([], [])
 
 
 def _print_validation_report(mp_errors, mp_warn):
@@ -385,23 +377,42 @@ def _check_required_provider_settings(sec_args, sec_path, p_name, key_provs):
     if p_name == "XForce":
         errs.append(_check_required_key(sec_args, "ApiID", sec_path))
     if p_name == _AZ_SENTINEL:
-        errs.append(_check_is_uuid(sec_args, "WorkspaceID", sec_path))
-        errs.append(_check_is_uuid(sec_args, "TenantID", sec_path))
+        errs.extend(
+            (
+                _check_is_uuid(sec_args, "WorkspaceID", sec_path),
+                _check_is_uuid(sec_args, "TenantID", sec_path),
+            )
+        )
+
     if p_name.startswith("AzureSentinel_"):
-        errs.append(_check_is_uuid(sec_args, "WorkspaceId", sec_path))
-        errs.append(_check_is_uuid(sec_args, "TenantId", sec_path))
+        errs.extend(
+            (
+                _check_is_uuid(sec_args, "WorkspaceId", sec_path),
+                _check_is_uuid(sec_args, "TenantId", sec_path),
+            )
+        )
+
     if (
         p_name == _AZ_CLI
         and "clientId" in sec_args
         and sec_args["clientId"] is not None
     ):
-        # only warn if partially filled - since these are optional
-        errs.append(_check_required_key(sec_args, "clientId", sec_path))
-        errs.append(_check_required_key(sec_args, "tenantId", sec_path))
-        errs.append(_check_required_key(sec_args, "clientSecret", sec_path))
+        errs.extend(
+            (
+                _check_required_key(sec_args, "clientId", sec_path),
+                _check_required_key(sec_args, "tenantId", sec_path),
+                _check_required_key(sec_args, "clientSecret", sec_path),
+            )
+        )
+
     if p_name == "RiskIQ":
-        errs.append(_check_required_key(sec_args, "ApiID", sec_path))
-        errs.append(_check_required_package("passivetotal", sec_path))
+        errs.extend(
+            (
+                _check_required_key(sec_args, "ApiID", sec_path),
+                _check_required_package("passivetotal", sec_path),
+            )
+        )
+
     return [err for err in errs if err]
 
 

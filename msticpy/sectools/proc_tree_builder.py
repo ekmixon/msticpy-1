@@ -114,9 +114,7 @@ def infer_schema(data: Union[pd.DataFrame, pd.Series]) -> Optional[ProcSchema]:
     for schema in SUPPORTED_SCHEMAS:
         matching_cols = set(src_cols) & set(schema.columns)
         schema_matches[len(matching_cols)] = schema
-    if max(schema_matches) > 5:
-        return schema_matches[max(schema_matches)]
-    return None
+    return schema_matches[max(schema_matches)] if max(schema_matches) > 5 else None
 
 
 def _add_tree_properties(proc_tree):

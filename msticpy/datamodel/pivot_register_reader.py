@@ -189,11 +189,7 @@ def _get_func_from_class(src_module, namespace, piv_reg):
     # If this is a class instance method, we need to have
     # an instance of the class
     src_class = getattr(src_module, piv_reg.src_class)
-    src_obj = None
-    # If a namespace was passed, look for an already-created
-    # object of this type
-    if namespace:
-        src_obj = _last_instance_of_type(src_class, namespace)
+    src_obj = _last_instance_of_type(src_class, namespace) if namespace else None
     if not src_obj:
         try:
             src_obj = src_class()
@@ -209,7 +205,8 @@ def _get_func_from_class(src_module, namespace, piv_reg):
 
 def _last_instance_of_type(var_type: Type, namespace: Dict[str, Any]):
     """Return the most recently created instance of type in namespace."""
-    matches = [var for _, var in namespace.items() if isinstance(var, var_type)]
-    if matches:
+    if matches := [
+        var for _, var in namespace.items() if isinstance(var, var_type)
+    ]:
         return matches[-1]
     return None

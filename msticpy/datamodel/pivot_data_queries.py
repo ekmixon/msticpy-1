@@ -87,12 +87,10 @@ class PivotQueryFunctions:
                 for param, p_attrs in q_source.params.items():
                     self.param_usage[param].append(
                         ParamAttrs(
-                            p_attrs["type"],
-                            src_name,
-                            family,
-                            bool(param in reqd_params),
+                            p_attrs["type"], src_name, family, param in reqd_params
                         )
                     )
+
                 # add an entry to the query dictionary containing full
                 # details of the function/query parameters
                 self.query_params[f"{family}.{src_name}"] = QueryParams(
@@ -101,10 +99,7 @@ class PivotQueryFunctions:
                     full_required=list(q_source.required_params),
                     param_attrs={
                         param: ParamAttrs(
-                            p_attrs["type"],
-                            src_name,
-                            family,
-                            bool(param in reqd_params),
+                            p_attrs["type"], src_name, family, param in reqd_params
                         )
                         for param, p_attrs in q_source.params.items()
                     },
@@ -133,10 +128,12 @@ class PivotQueryFunctions:
             If `family`.`query` could not be found.
 
         """
-        q_source = self._provider.query_store.data_families.get(family, {}).get(query)
-        if not q_source:
+        if q_source := self._provider.query_store.data_families.get(
+            family, {}
+        ).get(query):
+            return q_source
+        else:
             raise KeyError(f"No query found for {family}.{query}")
-        return q_source
 
     def get_query_pivot_settings(self, family: str, query: str) -> PivQuerySettings:
         """
@@ -216,15 +213,21 @@ class PivotQueryFunctions:
 
         """
         param_usage = self.param_usage.get(param)
-        if not param_usage:
-            return []
-        return [
-            (query_name, query_family, getattr(self._provider, query_func_name))
-            for query_name, query_family, query_func_name in (
-                (param.query, param.family, f"{param.family}.{param.query}")
-                for param in self.param_usage.get(param)  # type:ignore
-            )
-        ]
+        return (
+            [
+                (
+                    query_name,
+                    query_family,
+                    getattr(self._provider, query_func_name),
+                )
+                for query_name, query_family, query_func_name in (
+                    (param.query, param.family, f"{param.family}.{param.query}")
+                    for param in self.param_usage.get(param)  # type:ignore
+                )
+            ]
+            if param_usage
+            else []
+        )
 
     def get_params(self, query_func_name: str) -> Optional[QueryParams]:
         """

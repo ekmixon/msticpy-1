@@ -21,8 +21,7 @@ class CompEditDisplayMixin:
     """Mixin class with common display methods."""
 
     def _ipython_display_(self):
-        layout = getattr(self, "layout", None)
-        if layout:
+        if layout := getattr(self, "layout", None):
             display(layout)
 
     @staticmethod
@@ -269,12 +268,11 @@ class CompEditTabs:
         """
         self.tab = widgets.Tab()
         self.layout = self.tab
-        tabs = tabs or {}
         self._tab_state: List[widgets.Widget] = []
         self._tab_lazy_load: Dict[int, CETabControlDef] = {}
         self._tab_names: List[str] = []
         self.controls: Dict[str, Any] = {}
-        if tabs:
+        if tabs := tabs or {}:
             for tab_name, tab_ctrl in tabs.items():
                 if isinstance(tab_ctrl, CEItemsBase):
                     # if this is an already-instantiated widget, just add the tab
@@ -333,12 +331,11 @@ class CompEditTabs:
     def set_tab(self, tab_name: Optional[str], index: int = 0):
         """Programatically set the tab by name or index."""
         if tab_name:
-            tab_index = [
+            if tab_index := [
                 idx
                 for idx, tabname in enumerate(self._tab_names)
                 if tab_name.casefold() == tabname.casefold()
-            ]
-            if tab_index:
+            ]:
                 self.tab.selected_index = tab_index[0]
             return
         self.tab.selected_index = index

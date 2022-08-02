@@ -84,16 +84,14 @@ class Url(Entity):
     def __getitem__(self, key: str):
         """Allow property get using dictionary key syntax."""
         if self.Url:
-            val = url_components(self.Url).get(key)
-            if val:
+            if val := url_components(self.Url).get(key):
                 return val
         return super().__getitem__(key)
 
     def __getattr__(self, name: str):
         """Return the value of the named property 'name'."""
         if self.Url:
-            val = url_components(self.Url).get(name)
-            if val:
+            if val := url_components(self.Url).get(name):
                 return val
         return super().__getattr__(name)
 

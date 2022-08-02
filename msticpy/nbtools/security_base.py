@@ -190,8 +190,7 @@ class SecurityBase(QueryParamProvider):
             and self._ids["ResourceId"]
         ):
             self._ids["AzResourceId"] = self._id["ResourceId"]
-            res = self._get_subscription_from_resource(self._id["ResourceId"])
-            if res:
+            if res := self._get_subscription_from_resource(self._id["ResourceId"]):
                 self._ids["AzSubscriptionId"] = res
 
         return "AzSubscriptionId" in self._ids and "AzResourceId" in self._ids
@@ -207,10 +206,7 @@ class SecurityBase(QueryParamProvider):
             primary host entity (if any)
 
         """
-        hosts = self.get_entities_of_type("host")
-        if hosts:
-            return hosts[0]
-        return None
+        return hosts[0] if (hosts := self.get_entities_of_type("host")) else None
 
     @property
     def primary_process(self) -> Optional[Union[Process, Entity]]:
@@ -293,7 +289,7 @@ class SecurityBase(QueryParamProvider):
                 "data_environment": self.data_environment,
             }
 
-            dyn_query_params.update(self._custom_query_params)
+            dyn_query_params |= self._custom_query_params
             return dyn_query_params
         except AttributeError:
             return {}
@@ -483,41 +479,35 @@ class SecurityBase(QueryParamProvider):
         self.path_separator = "\\"
         self.os_family = "Windows"
 
-        # Use OSFamily if any entities have this property set
-        os_family_entities = [e for e in self.entities if "OSFamily" in e]
-        if os_family_entities:
+        if os_family_entities := [e for e in self.entities if "OSFamily" in e]:
             for os_entity in os_family_entities:
                 if os_entity["OSFamily"] == "Linux":
                     self.os_family = "Linux"
                     self.path_separator = "/"
                     break
+        elif files := [e for e in self.entities if e["Type"] == "file"]:
+            for file in files:
+                if "Directory" in file and "/" in file["Directory"]:
+                    self.os_family = "Linux"
+                    self.path_separator = "/"
+                    break
         else:
-            # Otherwise try to infer from the file paths
-            files = [e for e in self.entities if e["Type"] == "file"]
-            if files:
-                for file in files:
-                    if "Directory" in file and "/" in file["Directory"]:
-                        self.os_family = "Linux"
-                        self.path_separator = "/"
-                        break
-            else:
-                for proc in [
-                    e
-                    for e in self.entities
-                    if e["Type"] == "process" and "ImageFile" in e
-                ]:
-                    file = proc["ImageFile"]
-                    if "Directory" in file and "/" in file["Directory"]:
-                        self.os_family = "Linux"
-                        self.path_separator = "/"
-                        break
+            for proc in [
+                e
+                for e in self.entities
+                if e["Type"] == "process" and "ImageFile" in e
+            ]:
+                file = proc["ImageFile"]
+                if "Directory" in file and "/" in file["Directory"]:
+                    self.os_family = "Linux"
+                    self.path_separator = "/"
+                    break
 
     @staticmethod
     def _get_subscription_from_resource(resource_id) -> Optional[str]:
         """Extract subscription Id from resource string."""
         sub_regex = r"^/subscriptions/([^/]+)/"
-        sub_ids = re.findall(sub_regex, resource_id, re.RegexFlag.I)
-        if sub_ids:
+        if sub_ids := re.findall(sub_regex, resource_id, re.RegexFlag.I):
             return sub_ids[0]
 
         return None

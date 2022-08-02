@@ -98,20 +98,19 @@ class XForce(HttpProvider):
             and not response.query_subtype
         ):
             score = response.raw_result.get("score", 0)
-            result_dict.update(
-                {
-                    "score": response.raw_result.get("score", 0),
-                    "cats": response.raw_result.get("cats"),
-                    "categoryDescriptions": response.raw_result.get(
-                        "categoryDescriptions"
-                    ),
-                    "reason": response.raw_result.get("reason"),
-                    "reasonDescription": response.raw_result.get(
-                        "reasonDescription", 0
-                    ),
-                    "tags": response.raw_result.get("tags", 0),
-                }
-            )
+            result_dict |= {
+                "score": response.raw_result.get("score", 0),
+                "cats": response.raw_result.get("cats"),
+                "categoryDescriptions": response.raw_result.get(
+                    "categoryDescriptions"
+                ),
+                "reason": response.raw_result.get("reason"),
+                "reasonDescription": response.raw_result.get(
+                    "reasonDescription", 0
+                ),
+                "tags": response.raw_result.get("tags", 0),
+            }
+
             severity = (
                 TISeverity.information
                 if score < 2
@@ -123,17 +122,15 @@ class XForce(HttpProvider):
             response.ioc_type in ["file_hash", "md5_hash", "sha1_hash", "sha256_hash"]
             or response.query_subtype == "malware"
         ):
-            malware = response.raw_result.get("malware")
-            if malware:
-                result_dict.update(
-                    {
-                        "risk": malware.get("risk"),
-                        "family": malware.get("family"),
-                        "reasonDescription": response.raw_result.get(
-                            "reasonDescription", 0
-                        ),
-                    }
-                )
+            if malware := response.raw_result.get("malware"):
+                result_dict |= {
+                    "risk": malware.get("risk"),
+                    "family": malware.get("family"),
+                    "reasonDescription": response.raw_result.get(
+                        "reasonDescription", 0
+                    ),
+                }
+
                 severity = TISeverity.high
         if response.ioc_type in [
             "dns",
@@ -144,7 +141,7 @@ class XForce(HttpProvider):
             records = response.raw_result.get("total_rows", 0)
             contact = response.raw_result.get("contact", 0)
             if records:
-                result_dict.update({"records": records})
+                result_dict["records"] = records
             elif contact:
-                result_dict.update({"contact": contact})
+                result_dict["contact"] = contact
         return result, severity, result_dict

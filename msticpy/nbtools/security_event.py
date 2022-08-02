@@ -101,7 +101,7 @@ class SecurityEvent(SecurityBase):
             if "ImageFile" in event_proc:
                 self._entities.append(event_proc.ImageFile)
 
-        if event_id in ("4624", "4625"):
+        if event_id in {"4624", "4625"}:
             subj_account = Account(src_event=src_row, role="subject")
             subj_account.Host = host
             self._entities.append(subj_account)

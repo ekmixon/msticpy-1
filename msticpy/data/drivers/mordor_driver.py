@@ -254,10 +254,11 @@ class MordorDriver(DriverBase):
             raise self._create_not_connected_err()
         matches = []
         for mdr_id in search_mdr_data(self.mordor_data, terms=search):
-            for file_path in self.mordor_data[mdr_id].get_file_paths():
-                matches.append(
-                    f"{file_path['qry_path']} ({self.mordor_data[mdr_id].title})"
-                )
+            matches.extend(
+                f"{file_path['qry_path']} ({self.mordor_data[mdr_id].title})"
+                for file_path in self.mordor_data[mdr_id].get_file_paths()
+            )
+
         return matches
 
     @staticmethod
@@ -856,12 +857,11 @@ def search_mdr_data(
 
 
 def _extract_mitre_refs(ext_refs):
-    ref_dict = [
+    if ref_dict := [
         ref
         for ref in ext_refs
         if "source_name" in ref and ref["source_name"] == "mitre-attack"
-    ]
-    if ref_dict:
+    ]:
         return ref_dict[0]
     return {}
 

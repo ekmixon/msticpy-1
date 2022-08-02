@@ -346,7 +346,7 @@ def init_notebook(
         _pr_output(stdout_cap.getvalue())
 
     if prov_dict:
-        namespace.update(prov_dict)
+        namespace |= prov_dict
         current_providers = prov_dict
         _pr_output("Autoloaded components:", ", ".join(prov_dict.keys()))
 
@@ -477,9 +477,9 @@ def _build_import_list(
 ) -> Tuple[List[Dict[str, str]], List[Dict[str, str]]]:
     imports = []
     imports_all = []
-    if def_imports.casefold() in ["all", "nb"]:
+    if def_imports.casefold() in {"all", "nb"}:
         imports.extend(_NB_IMPORTS)
-    if def_imports.casefold() in ["all", "msticpy"]:
+    if def_imports.casefold() in {"all", "msticpy"}:
         imports.extend(_MP_IMPORTS)
         imports_all.extend(_MP_IMPORT_ALL)
     return imports, imports_all
@@ -530,9 +530,7 @@ def _get_or_create_config() -> bool:
             _pr_output("Please report this to msticpy@microsoft.com")
         # pylint: enable=broad-except
 
-    # Look for a config.json
-    config_json = search_for_file("config.json", paths=[".", ".."])
-    if config_json:
+    if config_json := search_for_file("config.json", paths=[".", ".."]):
         # if we found one, use it to populate msticpyconfig.yaml
         _populate_config_to_mp_config(mp_path, config_json)
         return True
@@ -546,10 +544,13 @@ def _populate_config_to_mp_config(mp_path, config_json):
     mp_path = mp_path or "./msticpyconfig.yaml"
     mp_config_convert = MpConfigFile(file=config_json)
     azs_settings = mp_config_convert.map_json_to_mp_ws()
-    def_azs_settings = next(
-        iter(azs_settings.get("AzureSentinel", {}).get("Workspaces", {}).values())
-    )
-    if def_azs_settings:
+    if def_azs_settings := next(
+        iter(
+            azs_settings.get("AzureSentinel", {})
+            .get("Workspaces", {})
+            .values()
+        )
+    ):
         mp_config_convert.settings["AzureSentinel"]["Workspaces"][
             "Default"
         ] = def_azs_settings.copy()
@@ -702,9 +703,7 @@ def _check_and_reload_pkg(
     pkg_version = tuple(int(v) for v in pkg.__version__.split("."))
     if pkg_version < req_version:
         _err_output(_MISSING_PKG_WARN.format(package=pkg_name))
-        resp = (
-            input("Install the package now? (y/n)") if not unit_testing() else "y"
-        )  # nosec
+        resp = "y" if unit_testing() else input("Install the package now? (y/n)")
         if resp.casefold().startswith("y"):
             warn_mssg.append(f"{pkg_name} was installed or upgraded.")
             pip_ver = ".".join(str(elem) for elem in req_version)

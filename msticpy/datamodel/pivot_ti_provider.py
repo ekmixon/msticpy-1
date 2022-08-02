@@ -72,7 +72,7 @@ def create_ti_pivot_funcs(ti_lookup: TILookup):
 
     # Add functions for ioc types that will call all providers
     # Non-IP types
-    ioc_queries.update(_get_non_ip_functions(ioc_type_supp, ti_lookup))
+    ioc_queries |= _get_non_ip_functions(ioc_type_supp, ti_lookup)
     # Special case for ipv4 and ipv6 - we want to merge these into "ip" if these are equivalent
     ioc_queries.update(_get_ip_functions(ioc_type_supp, ti_lookup))
 
@@ -116,9 +116,7 @@ def _prov_ipv4v6_equal(ti_provider) -> bool:
 def _merged_ip_ioc_type(ioc, ti_provider) -> Optional[str]:
     if ioc == "ipv4" and _prov_ipv4v6_equal(ti_provider):
         return "ip"
-    if ioc == "ipv6" and _prov_ipv4v6_equal(ti_provider):
-        return None
-    return ioc
+    return None if ioc == "ipv6" and _prov_ipv4v6_equal(ti_provider) else ioc
 
 
 def _create_lookup_func(

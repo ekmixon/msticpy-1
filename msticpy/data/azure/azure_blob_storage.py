@@ -47,12 +47,12 @@ class AzureBlobStorage:
         self.credentials = az_connect(auth_methods=auth_methods, silent=silent)
         if not self.credentials:
             raise CloudError("Could not obtain credentials.")
-        if not self.connection_string:
-            self.abs_client = BlobServiceClient(self.abs_site, self.credentials.modern)
-        else:
-            self.abs_client = BlobServiceClient.from_connection_string(
-                self.connection_string
-            )
+        self.abs_client = (
+            BlobServiceClient.from_connection_string(self.connection_string)
+            if self.connection_string
+            else BlobServiceClient(self.abs_site, self.credentials.modern)
+        )
+
         if not self.abs_client:
             raise CloudError("Could not create a Blob Storage client.")
         self.connected = True

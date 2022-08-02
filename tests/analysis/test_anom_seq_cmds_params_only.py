@@ -34,12 +34,10 @@ class TestCmdsParamsOnly(unittest.TestCase):
     """
 
     def setUp(self):
-        self.data1 = dict()
-        self.data2 = dict()
-        self.data3 = dict()
+        self.data2 = {}
+        self.data3 = {}
 
-        # populate data1
-        self.data1["sessions"] = []
+        self.data1 = {"sessions": []}
         self.data1["_seq1_counts"] = defaultdict(lambda: 0)
         self.data1["seq1_counts"] = StateMatrix({UNK_TOKEN: 2}, UNK_TOKEN)
         self.data1["_seq2_counts"] = defaultdict(lambda: defaultdict(lambda: 0))

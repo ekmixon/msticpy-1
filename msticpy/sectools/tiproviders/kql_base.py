@@ -203,20 +203,19 @@ class KqlTIProvider(TIProvider):
             data_result = query_obj(**query_params)
             if isinstance(data_result, pd.DataFrame):
                 data_result = data_result.copy()
-            else:
-                if (
+            elif (
                     hasattr(data_result, "completion_query_info")
                     and data_result.completion_query_info["StatusCode"] == 0
                     and data_result.records_count == 0
                 ):
-                    print("No results return from data provider.")
-                elif data_result and hasattr(data_result, "completion_query_info"):
-                    print(
-                        "No results returned from data provider. "
-                        + str(data_result.completion_query_info)
-                    )
-                else:
-                    print("Unknown response from provider: " + str(data_result))
+                print("No results return from data provider.")
+            elif data_result and hasattr(data_result, "completion_query_info"):
+                print(
+                    "No results returned from data provider. "
+                    + str(data_result.completion_query_info)
+                )
+            else:
+                print(f"Unknown response from provider: {str(data_result)}")
 
             src_ioc_frame = pd.DataFrame(obs_set, columns=["Ioc"])
             src_ioc_frame["IocType"] = ioc_type
@@ -316,10 +315,10 @@ class KqlTIProvider(TIProvider):
             "tenantid": ["tenant_id", "tenantid"],
         }
         variants = variant_dict.get(name, [name.casefold()])
-        for key, val in kwargs.items():
-            if key.casefold() in variants:
-                return val
-        return None
+        return next(
+            (val for key, val in kwargs.items() if key.casefold() in variants),
+            None,
+        )
 
     # pylint: disable=too-many-branches
     def _get_query_and_params(
@@ -330,37 +329,31 @@ class KqlTIProvider(TIProvider):
         **kwargs,
     ) -> Tuple[Callable, Dict[str, Any]]:
 
-        if query_type:
-            ioc_key = ioc_type + "-" + query_type
-        else:
-            ioc_key = ioc_type
-
+        ioc_key = f"{ioc_type}-{query_type}" if query_type else ioc_type
         query_def = self._IOC_QUERIES.get(ioc_key, None)
         if not query_def:
             raise LookupError(f"Provider does not support IoC type {ioc_key}.")
 
         query_name = query_def[0]
         query_def_params = query_def[1]
-        query_params = {}
         if "ioc" not in query_def_params:
             raise ValueError(
                 f"No parameter name defined for observable for {ioc_type}. "
                 + f"Referenced query: {query_name}"
             )
 
-        query_params[query_def_params["ioc"]] = ioc
+        query_params = {query_def_params["ioc"]: ioc}
         if "start" in kwargs:
             query_params["start"] = kwargs["start"]
         if "end" in kwargs:
             query_params["end"] = kwargs["end"]
 
-        query_obj = getattr(self._query_provider, query_name, None)
-        if not query_obj:
+        if query_obj := getattr(self._query_provider, query_name, None):
+            return query_obj, query_params
+        else:
             raise ValueError(
                 f"No query object name for {query_name} found in provider."
             )
-
-        return query_obj, query_params
 
     @staticmethod
     def _series_to_list(series: pd.Series) -> List[Any]:

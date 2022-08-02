@@ -68,29 +68,27 @@ class GreyNoise(HttpProvider):
         result_dict = {}
         # If community API response extract key elements
         if "riot" in response.raw_result:
-            result_dict.update(
-                {
-                    "Classification": response.raw_result.get("classification"),
-                    "Name": response.raw_result.get("name"),
-                    "Last Seen": response.raw_result.get("last_seen"),
-                    "Message": response.raw_result.get("message"),
-                    "Noise": response.raw_result.get("noise"),
-                    "RIOT": response.raw_result.get("riot"),
-                }
-            )
+            result_dict |= {
+                "Classification": response.raw_result.get("classification"),
+                "Name": response.raw_result.get("name"),
+                "Last Seen": response.raw_result.get("last_seen"),
+                "Message": response.raw_result.get("message"),
+                "Noise": response.raw_result.get("noise"),
+                "RIOT": response.raw_result.get("riot"),
+            }
+
         # If enterprise full lookup response extract key elements
         if "actor" in response.raw_result:
-            result_dict.update(
-                {
-                    "Classification": response.raw_result.get("classification"),
-                    "First Seen": response.raw_result.get("first_seen"),
-                    "Last Seen": response.raw_result.get("last_seen"),
-                    "Actor": response.raw_result.get("actor"),
-                    "Tags": response.raw_result.get("tags"),
-                    "VPN": response.raw_result.get("vpn_service", False),
-                    "Metadata": response.raw_result.get("metadata"),
-                }
-            )
+            result_dict |= {
+                "Classification": response.raw_result.get("classification"),
+                "First Seen": response.raw_result.get("first_seen"),
+                "Last Seen": response.raw_result.get("last_seen"),
+                "Actor": response.raw_result.get("actor"),
+                "Tags": response.raw_result.get("tags"),
+                "VPN": response.raw_result.get("vpn_service", False),
+                "Metadata": response.raw_result.get("metadata"),
+            }
+
         # If enterprise quick lookup just return raw data is its so small
         if "code" in response.raw_result:
             result_dict = response.raw_result

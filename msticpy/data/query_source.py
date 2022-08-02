@@ -249,11 +249,10 @@ class QuerySource:
             name: value.get("default", None) for name, value in self.params.items()
         }
 
-        param_dict.update(self.resolve_param_aliases(kwargs))
-        missing_params = {
+        param_dict |= self.resolve_param_aliases(kwargs)
+        if missing_params := {
             name: value for name, value in param_dict.items() if value is None
-        }
-        if missing_params:
+        }:
             raise ValueError(
                 "These required parameters were not set: ", f"{missing_params.keys()}"
             )
@@ -267,9 +266,7 @@ class QuerySource:
             if settings["type"] == "list":
                 param_dict[p_name] = self._parse_param_list(param_dict[p_name])
 
-            # The parameter may need custom formatting
-            fmt_template = settings.get("format", None)
-            if fmt_template:
+            if fmt_template := settings.get("format", None):
                 # custom formatting template in the query definition
                 param_dict[p_name] = fmt_template.format(param_dict[p_name])
             elif settings["type"] == "datetime" and isinstance(
@@ -316,14 +313,12 @@ class QuerySource:
         """Try to resolve any parameters in `param_dict` that are aliases."""
         out_dict = {}
         for param, value in param_dict.items():
-            if param in self.params:
-                out_dict[param] = value
+            if param not in self.params and (
+                aliased_param := self._get_aliased_param(param)
+            ):
+                out_dict[aliased_param] = value
             else:
-                aliased_param = self._get_aliased_param(param)
-                if aliased_param:
-                    out_dict[aliased_param] = value
-                else:
-                    out_dict[param] = value
+                out_dict[param] = value
         return out_dict
 
     def _get_aliased_param(self, alias: str) -> Optional[str]:
@@ -333,19 +328,20 @@ class QuerySource:
             for p_name, p_prop in self.params.items()
             if "aliases" in p_prop
         }
-        for param, props in aliased_params.items():
-            if alias in props["aliases"]:
-                return param
-        return None
+        return next(
+            (
+                param
+                for param, props in aliased_params.items()
+                if alias in props["aliases"]
+            ),
+            None,
+        )
 
     @classmethod
     def _calc_timeoffset(cls, time_offset: str) -> datetime:
         """Calculate date from offset specification."""
         delta = time_offset.split("@")[0]
-        rounding = None
-        if "@" in time_offset:
-            rounding = time_offset.split("@")[1].casefold()
-
+        rounding = time_offset.split("@")[1].casefold() if "@" in time_offset else None
         # Calculate the raw offset
         t_delta = cls._parse_timedelta(delta)
         result_date = datetime.utcnow() + t_delta
@@ -445,12 +441,17 @@ class QuerySource:
                 optional = " (optional)"
                 def_value = p_props["default"]
                 if isinstance(def_value, str) and len(def_value) > 50:
-                    def_value = def_value[:50] + "..."
+                    def_value = f"{def_value[:50]}..."
             else:
                 optional = ""
                 def_value = None
-            param_block.append(f'{p_name}: {p_props.get("type", "Any")}{optional}')
-            param_block.append(f'    {p_props.get("description", "no description")}')
+            param_block.extend(
+                (
+                    f'{p_name}: {p_props.get("type", "Any")}{optional}',
+                    f'    {p_props.get("description", "no description")}',
+                )
+            )
+
             if def_value:
                 param_block.append(f"    (default value is: {def_value})")
             if "aliases" in p_props:
@@ -499,8 +500,7 @@ class QuerySource:
         source_params = self.params.keys()
         q_params = set(re.findall(param_pattern, self._query))
 
-        missing_params = q_params - source_params
-        if missing_params:
+        if missing_params := q_params - source_params:
             msg = (
                 f"Source {self.name} has parameters that are defined in "
                 + "the query but not included in either defaults or "
@@ -509,10 +509,11 @@ class QuerySource:
             )
             valid_failures.append(msg)
 
-        missing_types = {
-            p_name for p_name, p_props in self.params.items() if "type" not in p_props
-        }
-        if missing_types:
+        if missing_types := {
+            p_name
+            for p_name, p_props in self.params.items()
+            if "type" not in p_props
+        }:
             msg = (
                 f"Source {self.name} has parameters that are defined in "
                 + 'the query but do not have a valid "type" property\n'

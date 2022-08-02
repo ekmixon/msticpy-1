@@ -48,9 +48,12 @@ def test_doc_pages_doc_links():
     results = check_docs("./docs", recurse=False)
     page_errors = []
     for page, result_dict in results.items():
-        for result in result_dict.values():
-            if result.status == 404:
-                page_errors.append(f"{result.status} - {result.url}")
+        page_errors.extend(
+            f"{result.status} - {result.url}"
+            for result in result_dict.values()
+            if result.status == 404
+        )
+
     if page_errors:
         print("Please fix the following 404 Errors:")
         for page in page_errors:

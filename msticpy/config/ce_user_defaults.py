@@ -136,13 +136,11 @@ class CEAutoLoadQProvs(CEItemsBase):
         del btn
         self.mp_controls.save_ctrl_values(self._current_path)
         val_results = self.mp_controls.validate_setting(self._current_path)
-        status = "  ".join(res[1] for res in val_results if not res[0])
-        if status:
+        if status := "  ".join(res[1] for res in val_results if not res[0]):
             self.set_status(status)
 
     def _get_available_options(self):
-        az_sent_provs = self.mp_controls.mp_config.get("AzureSentinel")
-        if az_sent_provs:
+        if az_sent_provs := self.mp_controls.mp_config.get("AzureSentinel"):
             # If we have Sentinel providers
             opt_list = [f"AzureSentinel.{ws}" for ws in az_sent_provs.get("Workspaces")]
         else:
@@ -179,12 +177,11 @@ class CEAutoLoadQProvs(CEItemsBase):
         curr_val = self.mp_controls.get_value(setting_path)
         if curr_val is None:
             curr_val = self._get_default_values(prov_name, conf_path)
+        elif "." in prov_name:
+            prov, child = prov_name.split(".", maxsplit=1)
+            curr_val = {prov: {child: curr_val}}
         else:
-            if "." in prov_name:
-                prov, child = prov_name.split(".", maxsplit=1)
-                curr_val = {prov: {child: curr_val}}
-            else:
-                curr_val = {prov_name: curr_val}
+            curr_val = {prov_name: curr_val}
 
         prov_ctrl.value = curr_val
 

@@ -175,8 +175,7 @@ def _get_relationships(vt_client, entity_id, vt_type, relationship):
 def _get_vt_api_scope() -> VTAPIScope:
     """Retrieve the VT enterprise key from settings."""
     prov_settings = get_provider_settings("TIProviders")
-    vt_settings = prov_settings.get("VirusTotal")
-    if vt_settings:
+    if vt_settings := prov_settings.get("VirusTotal"):
         return (
             VTAPIScope.PRIVATE
             if vt_settings.args.get("UseVT3PrivateAPI", False)

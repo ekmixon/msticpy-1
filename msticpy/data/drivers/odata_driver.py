@@ -121,12 +121,11 @@ class OData(DriverBase):
             # let user override config settings with function kwargs
             cs_dict.update(kwargs)
 
-        missing_settings = [
+        if missing_settings := [
             setting
             for setting in ("tenant_id", "client_id", "client_secret")
             if setting not in cs_dict
-        ]
-        if missing_settings:
+        ]:
             raise MsticpyUserConfigError(
                 "You must supply the following required connection parameter(s)",
                 "to the connect function or add them to your msticpyconfig.yaml.",
@@ -320,7 +319,4 @@ def _get_driver_settings(
             if app_config:
                 break
 
-    if not app_config:
-        return {}
-    # map names to allow for different spellings
-    return _map_config_dict_name(app_config)
+    return _map_config_dict_name(app_config) if app_config else {}

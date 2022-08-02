@@ -549,8 +549,7 @@ Alternatively, you can pass this to the GeoLiteLookup class when creating it:
         geo_entity.CountryName = (
             geo_match.get("country", {}).get("names", {}).get("en", None)
         )
-        subdivs = geo_match.get("subdivisions", [])
-        if subdivs:
+        if subdivs := geo_match.get("subdivisions", []):
             geo_entity.State = subdivs[0].get("names", {}).get("en", None)
         geo_entity.City = geo_match.get("city", {}).get("names", {}).get("en", None)
         geo_entity.Longitude = geo_match.get("location", {}).get("longitude", None)

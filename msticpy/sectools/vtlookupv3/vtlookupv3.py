@@ -148,19 +148,20 @@ class VTLookupV3:
             vt_type = VTEntityType(vt_object.type)
             if vt_type not in cls._SUPPORTED_VT_TYPES:
                 raise KeyError(f"Property type {vt_type} not supported")
-            if not all_props:
-                obj = {
+            obj = (
+                attributes
+                if all_props
+                else {
                     key: attributes[key]
                     for key in cls._BASIC_PROPERTIES_PER_TYPE[vt_type]
                     if key in attributes
                 }
-            else:
-                obj = attributes
-            vt_df = pd.json_normalize(data=[obj])
-            last_analysis_stats = attributes.get(
-                VTObjectProperties.LAST_ANALYSIS_STATS.value
             )
-            if last_analysis_stats:
+
+            vt_df = pd.json_normalize(data=[obj])
+            if last_analysis_stats := attributes.get(
+                VTObjectProperties.LAST_ANALYSIS_STATS.value
+            ):
                 vt_df[ColumnNames.DETECTIONS.value] = last_analysis_stats[
                     VTObjectProperties.MALICIOUS.value
                 ]
@@ -971,9 +972,11 @@ class VTLookupV3:
         if vte_type not in cls._SUPPORTED_VT_TYPES:
             not_found_dict["status"] = "Unsupported type"
         else:
-            not_found_dict.update(
-                {key: "Not found" for key in cls._BASIC_PROPERTIES_PER_TYPE[vte_type]}
-            )
+            not_found_dict |= {
+                key: "Not found"
+                for key in cls._BASIC_PROPERTIES_PER_TYPE[vte_type]
+            }
+
         return pd.DataFrame([not_found_dict])
 
     @classmethod
@@ -991,8 +994,7 @@ class VTLookupV3:
 def _get_vt_api_key() -> Optional[str]:
     """Retrieve the VT key from settings."""
     prov_settings = get_provider_settings("TIProviders")
-    vt_settings = prov_settings.get("VirusTotal")
-    if vt_settings:
+    if vt_settings := prov_settings.get("VirusTotal"):
         return vt_settings.args.get("AuthKey")
     return None
 

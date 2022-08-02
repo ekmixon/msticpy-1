@@ -267,14 +267,11 @@ def _prep_data(data: pd.DataFrame, param: PlotParams):
             max_size = value_series.max()
             # min_size = value_series.min()
             value_series = (max_size) / value_series
-        if log_size:
-            # calc log of values, if requested
-            return np.log(value_series)
-        return value_series
+        return np.log(value_series) if log_size else value_series
 
     if param.value_col is None:
         # calculate a count of rows in each group
-        other_cols = list(set(data.columns) - set([param.x_column, param.y_column]))
+        other_cols = list(set(data.columns) - {param.x_column, param.y_column})
         if other_cols:
             count_col = other_cols[0]
         else:

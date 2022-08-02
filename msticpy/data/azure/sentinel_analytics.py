@@ -173,10 +173,11 @@ class SentinelAnalyticsMixin:
             trigger_threshold = template_details["properties.triggerThreshold"]
             description = template_details["properties.description"]
             tactics = (
-                template_details["properties.tactics"]
-                if not pd.isna(template_details["properties.tactics"])
-                else []
+                []
+                if pd.isna(template_details["properties.tactics"])
+                else template_details["properties.tactics"]
             )
+
 
         if not tactics:
             tactics = []

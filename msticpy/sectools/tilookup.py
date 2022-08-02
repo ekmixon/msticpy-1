@@ -161,8 +161,8 @@ class TILookup:
                 continue
             # if it is a class - we only want to show concrete classes
             # that are sub-classes of TIProvider
-            if issubclass(provider_class, tiproviders.TIProvider) and not bool(
-                getattr(provider_class, "__abstractmethods__", False)
+            if issubclass(provider_class, tiproviders.TIProvider) and not getattr(
+                provider_class, "__abstractmethods__", False
             ):
                 providers.append(provider_class.__name__)
         return providers
@@ -245,7 +245,7 @@ class TILookup:
     @classmethod
     def list_available_providers(
         cls, show_query_types=False, as_list: bool = False
-    ) -> Optional[List[str]]:  # type: ignore
+    ) -> Optional[List[str]]:    # type: ignore
         """
         Print a list of builtin providers with optional usage.
 
@@ -273,9 +273,7 @@ class TILookup:
             if show_query_types and provider_class:
                 provider_class.usage()
 
-        if as_list:
-            return providers
-        return None
+        return providers if as_list else None
 
     def provider_usage(self):
         """Print usage of loaded providers."""

@@ -192,8 +192,7 @@ class PivotAccessor:
         acc_name = func_name = func = None
         if "." in df_func:
             acc_name, func_name = df_func.split(".")
-            accessor = getattr(self._df, acc_name, None)
-            if accessor:
+            if accessor := getattr(self._df, acc_name, None):
                 func = getattr(accessor, func_name, None)
         else:
             func = getattr(self._df, df_func, None)
@@ -357,20 +356,15 @@ class PivotAccessor:
             if col in self._df.columns:
                 sort_cols[col] = col_dict[col]
                 continue
-            # Look for case-insensitive match
-            df_col = df_cols.get(col.casefold())
-            if df_col:
+            if df_col := df_cols.get(col.casefold()):
                 sort_cols[col] = col_dict[col]
                 continue
-            # look for regex matches for col name
-            df_match_cols = [
+            if df_match_cols := [
                 df_cols[s_col]
                 for s_col in df_cols
                 if re.match(col, s_col, re.IGNORECASE)
-            ]
-            # we might get multiple matches
-            if df_match_cols:
-                sort_cols.update({df_col: col_dict[col] for df_col in df_match_cols})
+            ]:
+                sort_cols |= {df_col: col_dict[col] for df_col in df_match_cols}
                 continue
             raise ValueError(
                 f"'{col}' column in sort list did not match any columns in input data."
@@ -440,7 +434,7 @@ class PivotAccessor:
 def _name_match(cur_cols: Iterable[str], col_filter, match_case):
     col_filter = re.sub(r"[^.]\*", ".*", col_filter)
     col_filter = re.sub(r"[^.]\?", ".?", col_filter)
-    regex_opts = [re.IGNORECASE] if not match_case else []
+    regex_opts = [] if match_case else [re.IGNORECASE]
     return {col for col in cur_cols if re.match(col_filter, col, *regex_opts)}
 
 
@@ -448,6 +442,6 @@ def _json_safe_conv(val):
     if val:
         try:
             return json.loads(val)
-        except (TypeError, JSONDecodeError):
+        except TypeError:
             pass
     return val

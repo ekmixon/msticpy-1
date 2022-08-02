@@ -82,9 +82,7 @@ class CybereasonDriver(DriverBase):
 
         """
         data, response = self.query_with_results(query)
-        if isinstance(data, pd.DataFrame):
-            return data
-        return response
+        return data if isinstance(data, pd.DataFrame) else response
 
     def connect(
         self,
@@ -118,12 +116,11 @@ class CybereasonDriver(DriverBase):
         # let user override config settings with function kwargs
         cs_dict.update(kwargs)
 
-        missing_settings = [
+        if missing_settings := [
             setting
             for setting in ("tenant_id", "client_id", "client_secret")
             if setting not in cs_dict
-        ]
-        if missing_settings:
+        ]:
             raise MsticpyUserConfigError(
                 "You must supply the following required connection parameter(s)",
                 "to the connect function or add them to your msticpyconfig.yaml.",
@@ -226,8 +223,7 @@ class CybereasonDriver(DriverBase):
                 result[values["elementType"]] = values["name"]
         elif isinstance(element_values, dict):
             for key, values in element_values.items():
-                flattened = CybereasonDriver._flatten_result(values)
-                if flattened:
+                if flattened := CybereasonDriver._flatten_result(values):
                     for subkey, subvalues in flattened.items():
                         result[f"{key}.{subkey}"] = subvalues
         return result
@@ -353,7 +349,4 @@ class CybereasonDriver(DriverBase):
         if drv_config:
             app_config = dict(drv_config.args)
 
-        if not app_config:
-            return {}
-        # map names to allow for different spellings
-        return CybereasonDriver._map_config_dict_name(app_config)
+        return CybereasonDriver._map_config_dict_name(app_config) if app_config else {}

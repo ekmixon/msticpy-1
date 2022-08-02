@@ -402,8 +402,9 @@ class KqlDriver(DriverBase):
                 "The workspace ID used to connect to Microsoft Sentinel could not be found.",
                 "Please check that this is a valid workspace for your subscription",
             ]
-            ws_match = re.search(self._WS_RGX, self.current_connection, re.IGNORECASE)
-            if ws_match:
+            if ws_match := re.search(
+                self._WS_RGX, self.current_connection, re.IGNORECASE
+            ):
                 ws_name = ws_match.groupdict().get("ws")
                 ex_mssgs.append(f"The workspace id used was {ws_name}.")
             ex_mssgs.append(f"The full connection string was {self.current_connection}")

@@ -102,15 +102,8 @@ def risky_cmd_line(
                 b64match = b64_regex.search(message)
                 b64string = unpack(input_string=b64match[1])  # type: ignore
                 b64string = b64string[1]["decoded_string"].to_string()  # type: ignore
-                if re.match(detection, message):
-                    risky_actions.update({date: message})
-                else:
-                    pass
-            else:
-                if re.match(detection, message):
-                    risky_actions.update({date: message})
-                else:
-                    pass
+            if re.match(detection, message):
+                risky_actions[date] = message
     return risky_actions
 
 
@@ -149,7 +142,7 @@ def cmd_speed(
     if cmd_field not in cmd_events.columns:
         raise MsticpyException(f"Dataframe does not contain {cmd_field} column")
 
-    if isinstance(cmd_events["TimeGenerated"].iloc[0], dt.datetime) is False:
+    if not isinstance(cmd_events["TimeGenerated"].iloc[0], dt.datetime):
         raise MsticpyException("TimeGenerated is not a datetime format")
 
     suspicious_actions = []
@@ -166,7 +159,5 @@ def cmd_speed(
             suspicious_actions.append(
                 {df_len: [actions[df_len : (df_len + events)], delta]}  # noqa: E203
             )
-        else:
-            pass
         df_len = df_len - 1
     return suspicious_actions

@@ -252,15 +252,17 @@ class WorkspaceConfig:
 
         """
         ws_settings = pkg_config.settings.get("AzureSentinel", {}).get("Workspaces")
-        if not ws_settings:
-            return {}
-        return {
-            ws_name: {
-                cls.PKG_CONF_WS_KEY: ws.get(cls.PKG_CONF_WS_KEY),
-                cls.PKG_CONF_TENANT_KEY: ws.get(cls.PKG_CONF_TENANT_KEY),
+        return (
+            {
+                ws_name: {
+                    cls.PKG_CONF_WS_KEY: ws.get(cls.PKG_CONF_WS_KEY),
+                    cls.PKG_CONF_TENANT_KEY: ws.get(cls.PKG_CONF_TENANT_KEY),
+                }
+                for ws_name, ws in ws_settings.items()
             }
-            for ws_name, ws in ws_settings.items()
-        }
+            if ws_settings
+            else {}
+        )
 
     def prompt_for_ws(self):
         """Display an interactive prompt for Workspace details."""

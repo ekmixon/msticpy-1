@@ -30,8 +30,7 @@ def _get_entities_with_pivots():
         entity = getattr(entities, entity_name)
         if not isinstance(entity, type) or not issubclass(entity, entities.Entity):
             continue
-        piv_list = sorted(entity.get_pivot_list())
-        if piv_list:
+        if piv_list := sorted(entity.get_pivot_list()):
             piv_entities[entity_name] = entity, piv_list
     return piv_entities
 

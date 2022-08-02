@@ -96,9 +96,7 @@ class QueryProvider:
         # Add any query files
         data_env_queries: Dict[str, QueryStore] = {}
         if driver.use_query_paths:
-            data_env_queries.update(
-                self._read_queries_from_paths(query_paths=query_paths)
-            )
+            data_env_queries |= self._read_queries_from_paths(query_paths=query_paths)
         self.query_store = data_env_queries.get(
             self.environment, QueryStore(self.environment)
         )
@@ -109,8 +107,7 @@ class QueryProvider:
         """Return the value of the named property 'name'."""
         if "." in name:
             parent_name, child_name = name.split(".", maxsplit=1)
-            parent = getattr(self, parent_name, None)
-            if parent:
+            if parent := getattr(self, parent_name, None):
                 return getattr(parent, child_name)
         raise AttributeError(f"{name} is not a valid attribute.")
 
@@ -409,8 +406,7 @@ class QueryProvider:
             query_source.help()
             raise ValueError(f"No values found for these parameters: {missing}")
 
-        split_by = kwargs.pop("split_query_by", None)
-        if split_by:
+        if split_by := kwargs.pop("split_query_by", None):
             split_result = self._exec_split_query(
                 split_by=split_by,
                 query_source=query_source,
@@ -420,7 +416,6 @@ class QueryProvider:
             )
             if split_result is not None:
                 return split_result
-            # if split queries could not be created, fall back to default
         query_str = query_source.create_query(
             formatters=self._query_provider.formatters, **params
         )
@@ -448,13 +443,9 @@ class QueryProvider:
         params: Dict[str, Any], kwargs: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Return any kwargs not already in params."""
-        query_options = kwargs.pop("query_options", {})
-        if not query_options:
-            # Any kwargs left over we send to the query provider driver
-            query_options = {
-                key: val for key, val in kwargs.items() if key not in params
-            }
-        return query_options
+        return kwargs.pop("query_options", {}) or {
+            key: val for key, val in kwargs.items() if key not in params
+        }
 
     def _read_queries_from_paths(self, query_paths) -> Dict[str, QueryStore]:
         """Fetch queries from YAML files in specified paths."""
@@ -463,19 +454,16 @@ class QueryProvider:
         )  # type: ignore
         all_query_paths = []
         for default_path in settings.get("Default"):  # type: ignore
-            qry_path = self._resolve_package_path(default_path)
-            if qry_path:
+            if qry_path := self._resolve_package_path(default_path):
                 all_query_paths.append(qry_path)
 
         if settings.get("Custom") is not None:
             for custom_path in settings.get("Custom"):  # type: ignore
-                qry_path = self._resolve_path(custom_path)
-                if qry_path:
+                if qry_path := self._resolve_path(custom_path):
                     all_query_paths.append(qry_path)
         if query_paths:
             for custom_path in query_paths:
-                qry_path = self._resolve_path(custom_path)
-                if qry_path:
+                if qry_path := self._resolve_path(custom_path):
                     all_query_paths.append(qry_path)
 
         if not all_query_paths:

@@ -107,8 +107,10 @@ class OPR(HttpProvider):
         results: List[pd.Series] = []
         if not domain_list:
             return pd.DataFrame(columns=LookupResult.column_map())
-        for item_result in self._lookup_bulk_request(domain_list):  # type: ignore
-            results.append(pd.Series(attr.asdict(item_result)))
+        results.extend(
+            pd.Series(attr.asdict(item_result))
+            for item_result in self._lookup_bulk_request(domain_list)
+        )
 
         all_results = results + bad_requests
         return pd.DataFrame(data=all_results).rename(columns=LookupResult.column_map())
@@ -195,15 +197,16 @@ class OPR(HttpProvider):
         l_len = len(ioc_list)
         for step in range(0, l_len, batch_size):
             batch_list = ioc_list[step : (step + batch_size)]  # noqa: E203
-            for result in self._lookup_batch(batch_list):
-                yield result
+            yield from self._lookup_batch(batch_list)
 
     # pylint: disable=duplicate-code
     def _lookup_batch(self, ioc_list: list) -> Iterable[LookupResult]:
         # build the query string manually - of the form domains[N]=domN&domains[N+1]...
-        qry_elements = []
-        for idx, dom in zip(range(0, len(ioc_list)), ioc_list):
-            qry_elements.append(f"domains[{idx}]={dom}")
+        qry_elements = [
+            f"domains[{idx}]={dom}"
+            for idx, dom in zip(range(len(ioc_list)), ioc_list)
+        ]
+
         qry_str = "&".join(qry_elements)
         path = self._IOC_QUERIES["dns"].path
         req_url = f"{self._BASE_URL}{path}?{qry_str}"
@@ -218,8 +221,7 @@ class OPR(HttpProvider):
                 result.status = TILookupStatus.ok.value
                 result.reference = self._BASE_URL + path
                 result.raw_result = response.json()
-                for single_result in self._parse_multi_results(result):
-                    yield single_result
+                yield from self._parse_multi_results(result)
             else:
                 result.raw_result = str(response)
                 result.result = False
@@ -227,12 +229,7 @@ class OPR(HttpProvider):
                 result.status = response.status_code
                 result.details = "No response from provider."
                 yield result
-        except (
-            LookupError,
-            JSONDecodeError,
-            NotImplementedError,
-            ConnectionError,
-        ) as err:
+        except (LookupError, NotImplementedError, ConnectionError) as err:
             self._err_to_results(result, err)
             if not isinstance(err, LookupError):
                 result.reference = req_url

@@ -75,7 +75,7 @@ def get_query_list():
     )
 
 
-def generate_document(query_df):  # sourcery skip: identity-comprehension
+def generate_document(query_df):    # sourcery skip: identity-comprehension
     """Generate query list document."""
     doc_lines = [
         "Data Queries Reference",
@@ -91,9 +91,14 @@ def generate_document(query_df):  # sourcery skip: identity-comprehension
         if name not in group_dict:
             continue
         grp = group_dict[name]
-        doc_lines.append(f"Queries for {friendly_name}")
-        doc_lines.append("-" * len(f"Queries for {friendly_name}"))
-        doc_lines.append(f"\nData Environment identifier: {name}\n")
+        doc_lines.extend(
+            (
+                f"Queries for {friendly_name}",
+                "-" * len(f"Queries for {friendly_name}"),
+                f"\nData Environment identifier: {name}\n",
+            )
+        )
+
         tbl_txt = tabulate(
             grp.drop(columns="Environment"),
             headers="keys",

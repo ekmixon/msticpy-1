@@ -76,16 +76,8 @@ class AzureCloudConfig:
             for the identity.
 
         """
-        if cloud:
-            self.cloud = cloud
-        else:
-            self.cloud = get_azure_config_value("cloud", "global")
-
-        if tenant_id:
-            self.tenant_id = tenant_id
-        else:
-            self.tenant_id = get_azure_config_value("tenant_id", None)
-
+        self.cloud = cloud or get_azure_config_value("cloud", "global")
+        self.tenant_id = tenant_id or get_azure_config_value("tenant_id", None)
         self.auth_methods = default_auth_methods()
 
     @property
@@ -100,9 +92,7 @@ class AzureCloudConfig:
         aliases = {alias.casefold(): cloud for alias, cloud in CLOUD_ALIASES.items()}
         if alias_cf in aliases:
             return aliases[alias_cf]
-        if alias_cf in aliases.values():
-            return alias_cf
-        return None
+        return alias_cf if alias_cf in aliases.values() else None
 
     @property
     def endpoints(self) -> azure_cloud.CloudEndpoints:

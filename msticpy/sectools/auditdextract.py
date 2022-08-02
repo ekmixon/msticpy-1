@@ -206,7 +206,7 @@ def _extract_event(message_dict: Mapping[str, Any]) -> Tuple[str, Mapping[str, A
             # We don't check for duplicated keys here - if
             # there are multiple messages with the same key, the
             # last one will overwrite the previous value
-            event_dict.update(message_dict[mssg_type])
+            event_dict |= message_dict[mssg_type]
     return list(message_dict.keys())[0], event_dict
 
 
@@ -467,9 +467,8 @@ def _parse_audit_message(audit_str: str) -> Dict[str, List[str]]:
     """
     audit_message = audit_str.rstrip().split(": ")
     audit_headers = audit_message[0]
-    audit_hdr_match = re.match(r"type=([^\s]+)", audit_headers)
-    if audit_hdr_match:
-        return {audit_hdr_match.group(1): audit_message[1].split(" ")}
+    if audit_hdr_match := re.match(r"type=([^\s]+)", audit_headers):
+        return {audit_hdr_match[1]: audit_message[1].split(" ")}
     return {}  # type ignore
 
 
@@ -490,9 +489,8 @@ def _extract_timestamp(audit_str: str) -> str:
     """
     audit_message = audit_str.rstrip().split(": ")
     audit_headers = audit_message[0]
-    audit_hdr_match = re.match(r".*msg=audit\(([^\)]+)\)", audit_headers)
-    if audit_hdr_match:
-        return audit_hdr_match.group(1).split(":")[0]
+    if audit_hdr_match := re.match(r".*msg=audit\(([^\)]+)\)", audit_headers):
+        return audit_hdr_match[1].split(":")[0]
     return ""
 
 

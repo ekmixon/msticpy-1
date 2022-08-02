@@ -303,7 +303,7 @@ class IoCExtract:
 
         """
         check_kwargs(kwargs, ["ioc_types", "include_paths", "ignore_tlds"])
-        ioc_types = kwargs.get("ioc_types", None)
+        ioc_types = kwargs.get("ioc_types")
         include_paths = kwargs.get("include_paths", False)
         ignore_tld_current = self._ignore_tld
         self._ignore_tld = kwargs.get("ignore_tlds", False)
@@ -410,7 +410,7 @@ class IoCExtract:
 
         """
         check_kwargs(kwargs, ["ioc_types", "include_paths", "ignore_tlds"])
-        ioc_types = kwargs.get("ioc_types", None)
+        ioc_types = kwargs.get("ioc_types")
         include_paths = kwargs.get("include_paths", False)
         ignore_tld_current = self._ignore_tld
         self._ignore_tld = kwargs.get("ignore_tlds", False)
@@ -536,23 +536,23 @@ class IoCExtract:
             results = self._scan_for_iocs(
                 src=observable, ioc_types=[IoCType.linux_path.name]
             )
-        if not results:
-            return IoCType.unknown.name
-
-        # we need to select the type that is an exact match for the whole
-        # observable string (_scan_for_iocs will return matching substrings)
-        for ioc_type, match_set in results.items():
-            if observable in match_set:
-                return ioc_type
-
-        return IoCType.unknown.name
+        return (
+            next(
+                (
+                    ioc_type
+                    for ioc_type, match_set in results.items()
+                    if observable in match_set
+                ),
+                IoCType.unknown.name,
+            )
+            if results
+            else IoCType.unknown.name
+        )
 
     # Private methods
     def _validate_tld(self, domain: str) -> bool:
         """If validate TLDS check with TLD list."""
-        if self._ignore_tld:
-            return True
-        return self._dom_validator.validate_tld(domain)
+        return True if self._ignore_tld else self._dom_validator.validate_tld(domain)
 
     def _scan_for_iocs(
         self, src: str, ioc_types: List[str] = None

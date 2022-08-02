@@ -122,9 +122,10 @@ class FoliumMap:
                 or math.isnan(ip_entity.Location.Longitude)
             ):
                 warnings.warn(
-                    "Invalid location information for IP: " + ip_entity.Address,
+                    f"Invalid location information for IP: {ip_entity.Address}",
                     RuntimeWarning,
                 )
+
                 continue
             loc_props = ", ".join(
                 f"{key}={val}"

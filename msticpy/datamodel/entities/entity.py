@@ -242,7 +242,7 @@ class Entity(ABC, Node):
             params = f"{params}, edges={'. '.join(str(edge) for edge in self.edges)}"
 
         if len(params) > 80:
-            params = params[:80] + "..."
+            params = f"{params[:80]}..."
         return f"{self.__class__.__name__}({params})"
 
     def _to_dict(self) -> dict:
@@ -338,13 +338,15 @@ class Entity(ABC, Node):
         """
         if self == other:
             return True
-        if not isinstance(other, Entity):
-            return False
-        return not any(
-            self.__dict__[prop] != other.__dict__[prop]
-            and self.__dict__[prop]
-            and other.__dict__[prop]
-            for prop in self.__dict__  # pylint: disable=consider-using-dict-items
+        return (
+            not any(
+                self.__dict__[prop] != other.__dict__[prop]
+                and self.__dict__[prop]
+                and other.__dict__[prop]
+                for prop in self.__dict__  # pylint: disable=consider-using-dict-items
+            )
+            if isinstance(other, Entity)
+            else False
         )
 
     def merge(self, other: Any) -> "Entity":
@@ -407,9 +409,11 @@ class Entity(ABC, Node):
         }
         # Return True if there is no overlap
         overlap = self_id_props.keys() | other_id_props.keys()
-        if not overlap:
-            return True
-        return all(getattr(self, prop) == getattr(other, prop) for prop in overlap)
+        return (
+            all(getattr(self, prop) == getattr(other, prop) for prop in overlap)
+            if overlap
+            else True
+        )
 
     @property
     def properties(self) -> dict:
@@ -606,9 +610,12 @@ class Entity(ABC, Node):
                 continue
             if attr.__class__.__name__ != "QueryContainer":
                 continue
-            for name, qt_attr in attr:
-                if hasattr(qt_attr, "pivot_properties"):
-                    pivots.append(f"{prop}.{name}")
+            pivots.extend(
+                f"{prop}.{name}"
+                for name, qt_attr in attr
+                if hasattr(qt_attr, "pivot_properties")
+            )
+
         return sorted(pivots)
 
     # alias for get_pivot_list
@@ -656,8 +663,7 @@ class Entity(ABC, Node):
         if tgt_name != target:
             print(f"{target} rename to valid Python identifier {tgt_name}")
 
-        existing_attr = getattr(cls, tgt_name, None)
-        if existing_attr:
+        if existing_attr := getattr(cls, tgt_name, None):
             if not hasattr(existing_attr, "pivot_properties"):
                 raise TypeError(
                     f"Cannot overwrite existing an attribute {tgt_name}.",

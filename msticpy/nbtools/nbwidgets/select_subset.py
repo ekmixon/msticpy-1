@@ -169,10 +169,9 @@ class SelectSubset(IPyDisplayMixin):
 
     def _on_btn_del(self, button):
         del button
-        selected_set = set(self._select_list.options)
         # save the current index
         cur_index = max(self._select_list.index)
-        if selected_set:
+        if selected_set := set(self._select_list.options):
             for selected in self._select_list.value:
                 if self._src_dict:
                     selected_set.remove(self._src_dict[selected])
@@ -184,10 +183,10 @@ class SelectSubset(IPyDisplayMixin):
         # try to set the index to the next item in the list
         if cur_index < len(self._select_list.options):
             next_item = cur_index or 0
-            self._select_list.index = tuple([next_item])
+            self._select_list.index = (next_item, )
         else:
             last_item = max(len(self._select_list.options) - 1, 0)
-            self._select_list.index = tuple([last_item])
+            self._select_list.index = (last_item, )
 
     # pylint: enable=not-an-iterable
 

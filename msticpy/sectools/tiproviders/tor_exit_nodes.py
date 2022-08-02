@@ -110,9 +110,7 @@ class Tor(TIProvider):
         if result.status:
             return result
 
-        tor_node = self._nodelist.get(ioc)
-
-        if tor_node:
+        if tor_node := self._nodelist.get(ioc):
             result.set_severity(TISeverity.warning)
             result.details = {
                 "NodeID": tor_node["ExitNode"],

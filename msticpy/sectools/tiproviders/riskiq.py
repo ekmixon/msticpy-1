@@ -213,10 +213,10 @@ class RiskIQ(TIProvider, TIPivotProvider):
             "reputation": pt_result.reputation.as_dict,
         }
         ti_result.raw_result = ti_result.details
-        if pt_result.summary.total == 0 and pt_result.reputation.score == 0:
-            ti_result.result = False
-        else:
-            ti_result.result = True
+        ti_result.result = (
+            pt_result.summary.total != 0 or pt_result.reputation.score != 0
+        )
+
         rep_severity = self._severity_rep(pt_result.reputation.classification)
         ti_result.set_severity(rep_severity)
         if (

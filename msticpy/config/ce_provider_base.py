@@ -178,8 +178,7 @@ class CEProviders(CEItemsBase, ABC):
             return
         self.mp_controls.save_ctrl_values(self._current_path)
         val_results = self.mp_controls.validate_setting(self._current_path)
-        status = "  ".join(res[1] for res in val_results if not res[0])
-        if status:
+        if status := "  ".join(res[1] for res in val_results if not res[0]):
             self.set_status(status)
 
 

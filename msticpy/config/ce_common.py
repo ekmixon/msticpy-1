@@ -97,9 +97,7 @@ def py_to_widget(
         or val_type == "bool"
         or isinstance(value, bool)
     ):
-        if isinstance(value, str):
-            return value.casefold() == "true"
-        return bool(value)
+        return value.casefold() == "true" if isinstance(value, str) else bool(value)
     if val_type == "txt_dict" or (
         isinstance(ctrl, _TEXT_WIDGETS) and getattr(ctrl, "tag", None) == "txt_dict"
     ):
@@ -109,9 +107,7 @@ def py_to_widget(
     ):
         return "\n".join(value)
     if val_type == "str" or isinstance(ctrl, _TEXT_WIDGETS) or isinstance(value, str):
-        if value is None:
-            return ""
-        return str(value)
+        return "" if value is None else str(value)
     return value
 
 
@@ -142,12 +138,10 @@ def widget_to_py(ctrl: Union[widgets.Widget, SettingsControl]) -> Any:
     if isinstance(ctrl, widgets.Textarea) and getattr(ctrl, "tag", None) == "list":
         return ctrl.value.split("\n") if ctrl.value else []
     if isinstance(ctrl, _TEXT_WIDGETS):
-        if ctrl.value == "":
-            return None
-        return str(ctrl.value)
+        return None if ctrl.value == "" else str(ctrl.value)
     if isinstance(ctrl, widgets.SelectMultiple):
         return list(ctrl.value)
-    return None if not ctrl.value else ctrl.value
+    return ctrl.value or None
 
 
 # pylint: enable=too-many-return-statements
@@ -175,9 +169,8 @@ def get_def_tenant_id(sub_id: str) -> Optional[str]:
 
     """
     res_mgmt_uri = AzureCloudConfig().endpoints.resource_manager
-    get_tenant_url = (
-        f"{res_mgmt_uri}/subscriptions/{{subscriptionid}}" + "?api-version=2015-01-01"
-    )
+    get_tenant_url = f"{res_mgmt_uri}/subscriptions/{{subscriptionid}}?api-version=2015-01-01"
+
     resp = httpx.get(get_tenant_url.format(subscriptionid=sub_id))
     # Tenant ID is returned in the WWW-Authenticate header/Bearer authorization_uri
     www_header = resp.headers.get("WWW-Authenticate")
@@ -358,9 +351,7 @@ def get_defn_or_default(defn: Union[Tuple[str, Any], Any]) -> Tuple[str, Dict]:
         Tuple of setting type and options.
 
     """
-    if isinstance(defn, tuple):
-        return defn[0], defn[1]
-    return "str", {}
+    return (defn[0], defn[1]) if isinstance(defn, tuple) else ("str", {})
 
 
 # flake8: noqa: F821

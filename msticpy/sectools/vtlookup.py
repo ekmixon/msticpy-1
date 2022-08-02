@@ -320,8 +320,9 @@ class VTLookup:
             }
             err = (
                 f"IoC Type {ioc_type} is recognized by VirusTotal.",
-                f"Valid types are [{'', ''.join(vt_types)}]",
+                f"Valid types are [{'<unknown expression ERROR>':'.join(vt_types<unknown expression .>{vt_types}}]",
             )
+
             raise LookupError(err)
 
         # do the submission
@@ -376,15 +377,9 @@ class VTLookup:
         source_row_index = {}
         obs_batch = []
         batch_index = 0
-        row_num = 0
         row_count = len(input_frame)
-        if src_index_col:
-            src_cols = [src_col, src_index_col]
-        else:
-            src_cols = [src_col]
-
-        for idx, row in input_frame[src_cols].iterrows():
-            row_num += 1
+        src_cols = [src_col, src_index_col] if src_index_col else [src_col]
+        for row_num, (idx, row) in enumerate(input_frame[src_cols].iterrows(), start=1):
             observable = row[src_col]
 
             # Use the user-specified index if possible
@@ -473,7 +468,7 @@ class VTLookup:
         if isinstance(vt_results, str):
             try:
                 vt_results = json.loads(vt_results, strict=False)
-            except (JSONDecodeError, TypeError):
+            except TypeError:
                 pass
 
         if (
@@ -568,19 +563,19 @@ class VTLookup:
 
         # Parse returned results to our output dataframe depending
         # on the IoC type
-        if ioc_type in ["url", "md5_hash", "sha1_hash", "sha256_hash"]:
+        if ioc_type in {"url", "md5_hash", "sha1_hash", "sha256_hash"}:
             df_dict_vtresults["ResponseCode"] = results_dict.get("response_code", None)
             df_dict_vtresults["VerboseMsg"] = results_dict.get("verbose_msg", None)
             df_dict_vtresults["ScanId"] = results_dict.get("scan_id", None)
             df_dict_vtresults["Resource"] = results_dict.get("resource", None)
             df_dict_vtresults["Permalink"] = results_dict.get("permalink", None)
             df_dict_vtresults["Positives"] = results_dict.get("positives", None)
-            if ioc_type in ["md5_hash", "sha1_hash", "sha256_hash"]:
+            if ioc_type in {"md5_hash", "sha1_hash", "sha256_hash"}:
                 df_dict_vtresults["MD5"] = results_dict.get("md5", None)
                 df_dict_vtresults["SHA1"] = results_dict.get("sha1", None)
                 df_dict_vtresults["SHA256"] = results_dict.get("sha256", None)
 
-        if ioc_type in ["ipv4", "dns"]:
+        if ioc_type in {"ipv4", "dns"}:
             df_dict_vtresults["ResponseCode"] = results_dict.get("response_code", None)
             df_dict_vtresults["VerboseMsg"] = results_dict.get("verbose_msg", None)
             # dns and ipv4 have multi-valued 'resolutions' and 'detected_urls' lists
@@ -613,12 +608,11 @@ class VTLookup:
                 # positives are listed per detected_url so we need to
                 # pull those our and sum them.
                 positives = sum(
-                    [
-                        item["positives"]
-                        for item in results_dict["detected_urls"]
-                        if "positives" in item
-                    ]
+                    item["positives"]
+                    for item in results_dict["detected_urls"]
+                    if "positives" in item
                 )
+
                 df_dict_vtresults["Positives"] = positives
 
         return pd.DataFrame(
@@ -717,11 +711,11 @@ class VTLookup:
         duplicate = self.results[self.results["Observable"] == observable].copy()
         # if this is a file hash we should check for previous results in
         # all of the hash columns
-        if duplicate.shape[0] == 0 and ioc_type in [
+        if duplicate.shape[0] == 0 and ioc_type in {
             "md5_hash",
             "sha1_hash",
             "sh256_hash",
-        ]:
+        }:
             dup_query = (
                 "MD5 == @observable or SHA1 == @observable or SHA256 == @observable"
             )

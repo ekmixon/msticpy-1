@@ -247,8 +247,7 @@ def _process_from(
     join_expr = from_expr if isinstance(from_expr, list) else [from_expr]
     join_list = _get_join_list(join_expr)
     for join_item in join_list:
-        join_line = _parse_join(join_item)
-        if join_line:
+        if join_line := _parse_join(join_item):
             query_lines.append(join_line)
 
 
@@ -274,11 +273,10 @@ def _process_select(
             name = name or _gen_expr_name(item["value"])
             extend_items.append(f"{name} = {value}")
             project_items.append(name)
+        elif name:
+            project_items.append(f"{name} = {value}")
         else:
-            if name:
-                project_items.append(f"{name} = {value}")
-            else:
-                project_items.append(value)
+            project_items.append(value)
     if extend_items:
         query_lines.append(f"| extend {', '.join(extend_items)}")
     if project_items:
@@ -315,9 +313,7 @@ def _get_expr_list(expr_list):
 def _get_expr_value(expr_val):
     if isinstance(expr_val, dict) and "value" in expr_val:
         return expr_val["value"]
-    if isinstance(expr_val, list):
-        return _get_expr_list(expr_val)
-    return expr_val
+    return _get_expr_list(expr_val) if isinstance(expr_val, list) else expr_val
 
 
 def _process_group_by(parsed_sql: Dict[str, Any], query_lines: List[str]):
@@ -435,9 +431,7 @@ def _quote_literal(expr: Union[str, List[str], Any]) -> Any:
         return expr
     if isinstance(expr, str):
         return _quote(expr)
-    if isinstance(expr, list):
-        return [_quote(memb) for memb in expr]
-    return expr
+    return [_quote(memb) for memb in expr] if isinstance(expr, list) else expr
 
 
 def _is_literal(expr: Union[Dict[str, Any], Any]) -> Tuple[bool, Any]:
@@ -449,9 +443,7 @@ def _is_literal(expr: Union[Dict[str, Any], Any]) -> Tuple[bool, Any]:
 
 def _quote(expr: str) -> str:
     """Quote a string, if not already quoted."""
-    if expr.startswith("'") and expr.endswith("'"):
-        return expr
-    return f"'{expr}'"
+    return expr if expr.startswith("'") and expr.endswith("'") else f"'{expr}'"
 
 
 def _single_quote_strings(sql: str) -> str:
@@ -505,8 +497,7 @@ def _get_join_list(parsed_sql: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     for from_source in parsed_sql:
         if not isinstance(from_source, dict):
             continue
-        join = JOIN_KEYWORDS & from_source.keys()
-        if join:
+        if join := JOIN_KEYWORDS & from_source.keys():
             join_list.append(from_source)
     return join_list
 

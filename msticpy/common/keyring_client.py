@@ -39,8 +39,7 @@ class KeyringClient:
 
     def __getitem__(self, key: str):
         """Get key name."""
-        cred = self.get_secret(key)
-        if cred:
+        if cred := self.get_secret(key):
             return cred
         raise KeyError
 

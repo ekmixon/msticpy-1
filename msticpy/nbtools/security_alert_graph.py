@@ -166,12 +166,13 @@ def _add_alert_node(nx_graph, alert):
 def _find_graph_node(nx_graph, node_type, target_name):
     """Find a node with a given name and type."""
     node_prefix = f"{node_type}: {target_name}"
-    nodes = [
+    if nodes := [
         n
-        for (n, n_type) in nx.get_node_attributes(nx_graph, "entitytype").items()
+        for (n, n_type) in nx.get_node_attributes(
+            nx_graph, "entitytype"
+        ).items()
         if n_type == node_type and n.startswith(node_prefix)
-    ]
-    if nodes:
+    ]:
         return nodes[0]
     return None
 
@@ -191,9 +192,7 @@ def _add_related_alert_edge(nx_graph, source, target):
 
 def _get_account_qualified_name(account):
     name = account["Name"] if "Name" in account else None
-    if "NTDomain" in account:
-        return f"{account['NTDomain']}\\{name}"
-    return name
+    return f"{account['NTDomain']}\\{name}" if "NTDomain" in account else name
 
 
 def _get_name_and_description(entity, os_family="Windows"):

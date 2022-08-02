@@ -69,12 +69,11 @@ class HttpProvider(TIProvider):
         if "AuthKey" in kwargs:
             self._request_params["API_KEY"] = kwargs.pop("AuthKey")
 
-        missing_params = [
+        if missing_params := [
             param
             for param in self._REQUIRED_PARAMS
             if param not in self._request_params
-        ]
-        if missing_params:
+        ]:
             param_list = ", ".join(f"'{param}'" for param in missing_params)
             raise MsticpyConfigException(
                 f"Parameter values missing for TI Provider '{self.__class__.__name__}'",
@@ -158,12 +157,7 @@ class HttpProvider(TIProvider):
                 result.result = False
                 result.details = self._response_message(result.status)
             return result
-        except (  # pylint: disable=duplicate-code
-            LookupError,
-            JSONDecodeError,
-            NotImplementedError,
-            ConnectionError,
-        ) as err:
+        except (LookupError, NotImplementedError, ConnectionError) as err:
             self._err_to_results(result, err)
             if not isinstance(err, LookupError):
                 url = req_params.get("url", None) if req_params else None
@@ -196,7 +190,7 @@ class HttpProvider(TIProvider):
 
         """
         req_params = {"observable": ioc}
-        req_params.update(self._request_params)
+        req_params |= self._request_params
         ioc_key = f"{ioc_type}-{query_type}" if query_type else ioc_type
         src = self._IOC_QUERIES.get(ioc_key, None)
         if not src:
@@ -206,10 +200,11 @@ class HttpProvider(TIProvider):
         # substitute any parameter value from our req_params dict
         req_dict: Dict[str, Any] = {
             "headers": {},
-            "url": self._BASE_URL + src.path.format(**req_params)
-            if not src.full_url
-            else src.path.format(observable=ioc),
+            "url": src.path.format(observable=ioc)
+            if src.full_url
+            else self._BASE_URL + src.path.format(**req_params),
         }
+
 
         if src.headers:
             headers: Dict[str, Any] = {

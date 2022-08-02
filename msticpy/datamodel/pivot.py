@@ -175,14 +175,16 @@ class Pivot:
         providers: Iterable[Any] = None,
     ) -> Any:
         if providers:
-            ti_provs = [prov for prov in providers if isinstance(prov, provider_type)]
-            if ti_provs:
+            if ti_provs := [
+                prov for prov in providers if isinstance(prov, provider_type)
+            ]:
                 return ti_provs[0]
         if namespace:
-            ns_providers = [
-                prov for prov in namespace.values() if isinstance(prov, provider_type)
-            ]
-            if ns_providers:
+            if ns_providers := [
+                prov
+                for prov in namespace.values()
+                if isinstance(prov, provider_type)
+            ]:
                 return ns_providers[-1]
         return None
 
@@ -414,12 +416,12 @@ class Pivot:
 
         """
         all_entities = dir(entities)
-        if entity != "all":
-            if entity not in all_entities:
-                raise ValueError(f"Entity name '{entity}' not found.")
-            entity_names = [entity]
-        else:
+        if entity == "all":
             entity_names = all_entities
+        elif entity not in all_entities:
+            raise ValueError(f"Entity name '{entity}' not found.")
+        else:
+            entity_names = [entity]
         for entity_name in entity_names:
             entity_cls = getattr(entities, entity_name)
             for attr in dir(entity_cls):

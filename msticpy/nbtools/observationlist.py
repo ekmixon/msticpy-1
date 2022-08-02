@@ -122,7 +122,7 @@ class Observations:
         """
         self.observation_list: Dict[str, Observation] = OrderedDict()
         if observationlist is not None:
-            self.observation_list.update(observationlist.observations)
+            self.observation_list |= observationlist.observations
 
     @property
     def observations(self) -> Mapping[str, Observation]:
@@ -168,8 +168,7 @@ class Observations:
             self.observation_list[observation.caption] = observation
         else:
             req_fields = set(Observation.required_fields())
-            missing_fields = req_fields.difference(kwargs.keys())
-            if missing_fields:
+            if missing_fields := req_fields.difference(kwargs.keys()):
                 raise ValueError(
                     "The following fields are required",
                     f"in an Observation: {missing_fields}",

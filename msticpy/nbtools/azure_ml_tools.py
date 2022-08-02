@@ -246,8 +246,7 @@ def _get_pkg_version(version: Union[str, Tuple]) -> DistInfoDistribution:
 def _get_installed_mp_version() -> Optional[DistInfoDistribution]:
     """Return the installed version of MSTICPY."""
     working_set = WorkingSet()
-    mp_installed = working_set.find(Requirement("msticpy"))
-    if mp_installed:
+    if mp_installed := working_set.find(Requirement("msticpy")):
         return mp_installed.parsed_version
     return None
 
@@ -380,12 +379,11 @@ def _check_kql_prereqs():
             return
         apt_list = ip_shell.run_line_magic("sx", "apt list")
         apt_list = [apt.split("/", maxsplit=1)[0] for apt in apt_list]
-        missing_lx_pkg = [
+        if missing_lx_pkg := [
             apt_pkg
             for apt_pkg in ("libgirepository1.0-dev", "gir1.2-secret-1")
             if apt_pkg not in apt_list
-        ]
-        if missing_lx_pkg:
+        ]:
             _disp_html(
                 "Kqlmagic/msal-extensions pre-requisite PyGObject not installed."
             )

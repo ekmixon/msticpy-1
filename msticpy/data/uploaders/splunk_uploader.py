@@ -118,7 +118,7 @@ class SplunkUploader(UploaderBase):
             Set this to true to create the index if it doesn't already exist. Default is False.
 
         """
-        host = kwargs.get("host", None)
+        host = kwargs.get("host")
         if not isinstance(data, pd.DataFrame):
             raise MsticpyUserError(
                 "Data must be in Pandas DataFrame format.",
@@ -160,7 +160,7 @@ class SplunkUploader(UploaderBase):
             Set this to true to create the index if it doesn't already exist. Default is False.
 
         """
-        host = kwargs.get("host", None)
+        host = kwargs.get("host")
         path = Path(file_path)
         try:
             data = pd.read_csv(path, delimiter=delim)
@@ -208,7 +208,7 @@ class SplunkUploader(UploaderBase):
             Set this to true to create the index if it doesn't already exist. Default is False.
 
         """
-        host = kwargs.get("host", None)
+        host = kwargs.get("host")
         glob_pat = kwargs.get("glob", "*")
         t_name = bool(table_name)
         input_files = Path(folder_path).glob(glob_pat)
@@ -240,9 +240,7 @@ class SplunkUploader(UploaderBase):
     def _check_index(self, index_name: str):
         """Check if index exists in Splunk host."""
         service_list = [item.name for item in self.driver.service.indexes]
-        if index_name in service_list:
-            return True
-        return False
+        return index_name in service_list
 
     def _load_index(self, index_name, create: bool = True):
         """Load specified Index or create if it doesn't exist."""

@@ -59,9 +59,12 @@ def extract_query_params(
     # These any parameters obtained from _get_object_params
     if kwargs:
         resolved_params = query_source.resolve_param_aliases(kwargs)
-        req_params.update(
-            {key: arg for key, arg in resolved_params.items() if key in all_params}
-        )
+        req_params |= {
+            key: arg
+            for key, arg in resolved_params.items()
+            if key in all_params
+        }
+
 
     # Get the names of any params that were required but we didn't
     # find a value for

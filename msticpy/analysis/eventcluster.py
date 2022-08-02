@@ -199,7 +199,7 @@ def _merge_clustered_items(
         class_members = labels == cluster_id
         if isinstance(data, pd.DataFrame):
             time_ordered = data[class_members].sort_values(time_column, ascending=True)
-            first_event_time = time_ordered[0:][time_column].iat[0]
+            first_event_time = time_ordered[:][time_column].iat[0]
             last_event_time = time_ordered[-1:][time_column].iat[0]
         else:
             first_event_time = None
@@ -237,7 +237,7 @@ def _merge_clustered_items(
                     TimeGenerated=first_event_time,
                     FirstEventTime=first_event_time,
                     LastEventTime=last_event_time,
-                )[0:1]
+                )[:1]
                 .astype(
                     dtype={
                         "TimeGenerated": ts_type,
@@ -246,6 +246,7 @@ def _merge_clustered_items(
                     }
                 )
             )
+
     # pylint: enable=consider-using-enumerate
     return pd.concat(cluster_list)
 
@@ -676,7 +677,7 @@ def plot_cluster(  # noqa: C901, MC0001
         raise ValueError(f"plot_features[1] index must be a value from 0 to {max_idx}.")
     if plot_features[0] == plot_features[1]:
         mssg = "plot_features indexes must be 2 different values in range 0 to"
-        raise ValueError(mssg + f" {max_idx}.")
+        raise ValueError(f"{mssg} {max_idx}.")
 
     labels = db_cluster.labels_
     core_samples_mask = np.zeros_like(labels, dtype=bool)
@@ -719,7 +720,7 @@ def plot_cluster(  # noqa: C901, MC0001
         font_size = "small"
         alpha = 0.4
 
-        if cluster_size < cut_off:
+        if marker_size < cut_off:
             marker = "+"
             marker_size = 10
             font_size = "large"

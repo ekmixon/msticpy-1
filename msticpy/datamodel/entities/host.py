@@ -97,9 +97,7 @@ class Host(Entity):
     @property
     def fqdn(self) -> Optional[str]:
         """Construct FQDN from host + dns."""
-        if self.DnsDomain:
-            return f"{self.HostName}.{self.DnsDomain}"
-        return self.HostName
+        return f"{self.HostName}.{self.DnsDomain}" if self.DnsDomain else self.HostName
 
     @property
     def FullName(self) -> Optional[str]:  # noqa: N802

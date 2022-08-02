@@ -173,8 +173,7 @@ class MpConfigControls:
         ctrl_tree = self.get_control(path)
         if isinstance(ctrl_tree, widgets.Widget):
             print_debug("_set_ctrl_values - widget", ctrl_tree)
-            curr_value = py_to_widget(self.get_value(path), ctrl=ctrl_tree)
-            if curr_value:
+            if curr_value := py_to_widget(self.get_value(path), ctrl=ctrl_tree):
                 ctrl_tree.value = curr_value
         elif isinstance(ctrl_tree, SettingsControl):
             print_debug(
@@ -184,8 +183,7 @@ class MpConfigControls:
                 path,
                 self.get_value(path),
             )
-            curr_value = self.get_value(path)
-            if curr_value:
+            if curr_value := self.get_value(path):
                 ctrl_tree.value = curr_value
         elif isinstance(ctrl_tree, dict):
             for key in ctrl_tree:
@@ -341,8 +339,7 @@ class MpConfigControls:
         # definition
         if isinstance(conf_defn, tuple):
             val_type, val_opts = conf_defn
-            validator = _VALIDATORS.get(val_type)
-            if validator:
+            if validator := _VALIDATORS.get(val_type):
                 return validator(setting, path, val_type, val_opts)
             return ValidtnResult(True, "No validator for type '{val_type}'")
 
@@ -361,9 +358,7 @@ class MpConfigControls:
             r"(?P<type>[^()]+)\((?P<params>.*)\)$", conf_val.strip()
         )
         val_type = val_type_match.groupdict().get("type")
-        val_param_str = val_type_match.groupdict().get("params", "")
-
-        if val_param_str:
+        if val_param_str := val_type_match.groupdict().get("params", ""):
             val_params = {
                 param.split("=")[0].strip(): param.split("=")[1].strip()
                 for param in val_param_str.split(",")
@@ -447,8 +442,9 @@ def get_mpconfig_definitions() -> Dict[str, Any]:
 
     """
     pkg_root = __package__.split(".", maxsplit=1)[0]
-    file_bytes = pkgutil.get_data(pkg_root, "resources/mpconfig_defaults.yaml")
-    if file_bytes:
+    if file_bytes := pkgutil.get_data(
+        pkg_root, "resources/mpconfig_defaults.yaml"
+    ):
         return yaml.safe_load(file_bytes)
     raise ValueError("Could not load definitions from resources/mpconfig_defaults.yaml")
 
@@ -489,11 +485,14 @@ def _validate_bool(value, path, val_type, val_opts):
     mssg = _get_mssg(value, path)
     if _is_none_and_not_required(value, val_type, val_opts):
         return ValidtnResult(True, f"{_VALID_SUCESS} {mssg}")
-    if not isinstance(value, bool):
-        return ValidtnResult(
-            False, f"Value type {type(value)} should be type {val_type} - {mssg}"
+    return (
+        ValidtnResult(True, f"{_VALID_SUCESS} {mssg}")
+        if isinstance(value, bool)
+        else ValidtnResult(
+            False,
+            f"Value type {type(value)} should be type {val_type} - {mssg}",
         )
-    return ValidtnResult(True, f"{_VALID_SUCESS} {mssg}")
+    )
 
 
 def _validate_m_enum(value, path, val_type, val_opts):
@@ -516,8 +515,9 @@ def _validate_m_enum(value, path, val_type, val_opts):
                 f"Value '{value}' should be a string or list. "
                 + f"Must be one of {', '.join(val_opts['options'])} - {mssg}",
             )
-        invalid_opts = [val for val in value if val not in val_opts["options"]]
-        if invalid_opts:
+        if invalid_opts := [
+            val for val in value if val not in val_opts["options"]
+        ]:
             return ValidtnResult(
                 False,
                 f"Invalid values '{invalid_opts}' found. "

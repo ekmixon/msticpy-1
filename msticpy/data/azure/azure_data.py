@@ -291,13 +291,15 @@ class AzureData:
 
         resources = []  # type: List
         if rgroup is None:
-            for resource in self.resource_client.resources.list():  # type: ignore
-                resources.append(resource)
+            resources.extend(iter(self.resource_client.resources.list()))
         else:
-            for resource in self.resource_client.resources.list_by_resource_group(  # type: ignore
-                rgroup
-            ):
-                resources.append(resource)
+            resources.extend(
+                iter(
+                    self.resource_client.resources.list_by_resource_group(  # type: ignore
+                        rgroup
+                    )
+                )
+            )
 
         # Warn users about getting full properties for each resource
         if get_props:

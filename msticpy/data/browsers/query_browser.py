@@ -53,8 +53,7 @@ def _format_query_doc(query_doc) -> Generator[str, None, None]:
         elif line.strip().startswith("---"):
             continue
         else:
-            indent = len(line) - len(line.strip())
-            if indent:
+            if indent := len(line) - len(line.strip()):
                 indent *= 10
                 yield f"<div style='margin-left: {indent}px'>{line}</div>"
             else:

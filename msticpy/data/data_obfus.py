@@ -4,6 +4,7 @@
 # license information.
 # --------------------------------------------------------------------------
 """Data obfuscation functions."""
+
 import hashlib
 import pkgutil
 import re
@@ -18,13 +19,13 @@ import yaml
 
 OBFUS_COL_MAP: Dict[str, str] = {}
 _MAP_FILE = "resources/obfuscation_cols.yaml"
-_obfus_map_file = pkgutil.get_data("msticpy", _MAP_FILE)
-if not _obfus_map_file:
-    warnings.warn(f"Could not find obfuscation column map {_MAP_FILE}")
-else:
+if _obfus_map_file := pkgutil.get_data("msticpy", _MAP_FILE):
     _obfus_dicts = yaml.safe_load(_obfus_map_file)
     for data_col_map in _obfus_dicts.values():
-        OBFUS_COL_MAP.update(data_col_map)
+        OBFUS_COL_MAP |= data_col_map
+
+else:
+    warnings.warn(f"Could not find obfuscation column map {_MAP_FILE}")
 
 
 def hash_string(input_str: str) -> str:
@@ -45,14 +46,17 @@ def hash_string(input_str: str) -> str:
     if not input_str:
         return input_str
     if not isinstance(input_str, str):
-        input_str = str(input_str)
+        input_str = input_str
     str_dig = hashlib.sha256(bytes(input_str, "utf-8")).hexdigest()
-    factor = int(len(input_str) / len(str_dig))
+    factor = len(input_str) // len(str_dig)
     out_str = (str_dig * max(factor, 1))[: len(input_str)]
-    if not input_str.isnumeric():
-        return "".join([chr(int(c) + 105) if c.isdigit() else c for c in out_str])
-    # Convert entirely numeric strings to numbers
-    return "".join([c if c.isdigit() else str(ord(c) - 97) for c in out_str])
+    return (
+        "".join([c if c.isdigit() else str(ord(c) - 97) for c in out_str])
+        if input_str.isnumeric()
+        else "".join(
+            [chr(int(c) + 105) if c.isdigit() else c for c in out_str]
+        )
+    )
 
 
 @lru_cache(maxsize=1024)
@@ -131,7 +135,7 @@ def _hash_ip_item(ip_addr: str) -> str:
     return hashlib.sha256(bytes(ip_addr, "utf-8")).hexdigest()[: len(ip_addr)]
 
 
-_WK_IPV4 = set(["0.0.0.0", "127.0.0.1", "255.255.255.255"])  # nosec
+_WK_IPV4 = {"0.0.0.0", "127.0.0.1", "255.255.255.255"}
 
 
 def _map_ip4_address(ip_addr: str) -> str:
@@ -277,8 +281,7 @@ def hash_sid(sid: str) -> str:
     """
     if re.match(WK_SID_PATTERN, sid):
         return sid
-    usr_sid = re.match(SID_PATTERN, sid)
-    if usr_sid:
+    if usr_sid := re.match(SID_PATTERN, sid):
         return (
             f"{usr_sid.groups()[0]}{hash_item(usr_sid.groups()[1], delim='-')}"
             + f"{usr_sid.groups()[2]}"
@@ -286,18 +289,16 @@ def hash_sid(sid: str) -> str:
     return sid
 
 
-_WK_ACCOUNTS = set(
-    [
-        "administrator",
-        "guest",
-        "system",
-        "local service",
-        "network service",
-        "root",
-        "crontab",
-        "nt authority",
-    ]
-)
+_WK_ACCOUNTS = {
+    "administrator",
+    "guest",
+    "system",
+    "local service",
+    "network service",
+    "root",
+    "crontab",
+    "nt authority",
+}
 
 
 @lru_cache(maxsize=1024)
@@ -335,9 +336,7 @@ def hash_account(account: str) -> str:
 
     if acct_type == "UPN":
         return f"{user}@{domain}"
-    if acct_type == "NT":
-        return f"{domain}/{user}"
-    return user
+    return f"{domain}/{user}" if acct_type == "NT" else user
 
 
 def _guid_replacer() -> Callable[[str], str]:
@@ -452,7 +451,7 @@ def mask_df(  # noqa: MC0001
                     axis=1,
                 )
         except Exception as err:
-            print(col_name, str(err))
+            print(col_name, err)
             raise
 
     if not silent:

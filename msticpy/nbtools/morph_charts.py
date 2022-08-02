@@ -141,16 +141,13 @@ def _get_charts(path: str = "morph_charts") -> dict:
         with open(chart, "r", encoding="utf-8") as chart_data:
             details = yaml.safe_load(chart_data)
         try:
-            chart_details.update(
-                {
-                    details["Name"]: {
-                        "Description": details["Description"],
-                        "Query": details["Query"],
-                        "Tags": details["Tags"],
-                        "DescriptionFile": details["DescriptionFile"],
-                    }
-                }
-            )
+            chart_details[details["Name"]] = {
+                "Description": details["Description"],
+                "Query": details["Query"],
+                "Tags": details["Tags"],
+                "DescriptionFile": details["DescriptionFile"],
+            }
+
         except KeyError as key_err:
             raise Exception(
                 f"{chart} description does not appear to be in the correct format."

@@ -74,9 +74,11 @@ class TimeSpan:
 
     def __eq__(self, value):
         """Return True if the timespans are equal."""
-        if not isinstance(value, TimeSpan):
-            return False
-        return self.start == value.start and self.end == value.end
+        return (
+            self.start == value.start and self.end == value.end
+            if isinstance(value, TimeSpan)
+            else False
+        )
 
     def __hash__(self):
         """Return the hash of the timespan."""

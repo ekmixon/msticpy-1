@@ -216,25 +216,22 @@ class DataTableColumnChooser:
 
 def _layout(width, height=None, desc_width=None, **kwargs):
     """Layout creation for widgets."""
-    wgt_dict = {}
     lo_dict = {"width": width}
     if height:
         lo_dict["height"] = height
-    border = kwargs.pop("border", None)
-    if border:
-        lo_dict.update(
-            {
-                "border": "solid gray 1px",
-                "margin": "1pt",
-                "padding": "5pt",
-            }
-        )
-    wgt_dict["layout"] = widgets.Layout(**lo_dict)
+    if border := kwargs.pop("border", None):
+        lo_dict |= {
+            "border": "solid gray 1px",
+            "margin": "1pt",
+            "padding": "5pt",
+        }
+
+    wgt_dict = {"layout": widgets.Layout(**lo_dict)}
     style_dict = {}
     if desc_width:
         style_dict["description_width"] = desc_width
     if kwargs:
-        style_dict.update(kwargs)
+        style_dict |= kwargs
     if style_dict:
         wgt_dict["style"] = style_dict
     return wgt_dict
@@ -362,15 +359,15 @@ class DataTableFilter:
         return self.data[self.bool_filters]
 
     def _select_filter(self, change):
-        filter_name = change["new"]
-        if not filter_name:
+        if filter_name := change["new"]:
+            (
+                self._col_select.value,
+                self._not_cb.value,
+                self._oper_sel.value,
+                self._filter_value.value,
+            ) = self.filters[filter_name]
+        else:
             return
-        (
-            self._col_select.value,
-            self._not_cb.value,
-            self._oper_sel.value,
-            self._filter_value.value,
-        ) = self.filters[filter_name]
 
     def _update_operators(self, change):
         del change
@@ -436,7 +433,7 @@ class DataTableFilter:
     def _create_filter(self, col: str, operator: str, expr: str) -> pd.Series:
         if operator == "query":
             return pd.Series(self.data.index.isin(self.data.query(expr).index))
-        if operator in ("in", "between"):
+        if operator in {"in", "between"}:
             return self._filter_in_or_between(col, operator, expr)
 
         test_expr = self._conv_expr_type(col, expr)
@@ -507,9 +504,7 @@ def _get_col_width(data, col):
         return 8
     if data[col].dtype == "O":
         return int(data[col].iloc[:10].str.len().mean())
-    if pd.api.types.is_datetime64_any_dtype(data[col]):
-        return 50
-    return 8
+    return 50 if pd.api.types.is_datetime64_any_dtype(data[col]) else 8
 
 
 def _get_cols_from_df(data):
@@ -533,5 +528,5 @@ def _get_cols_from_df(data):
         )
         for col in dt_cols
     }
-    columns.update(dt_columns)
+    columns |= dt_columns
     return {col: columns[col] for col in col_order}
